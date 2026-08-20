@@ -1,0 +1,1 @@
+class Exercise { const Exercise({required this.id,required this.title,required this.category,required this.level,required this.duration,required this.calories,required this.youtubeId,required this.about,required this.benefits}); final String id,title,category,level,duration,calories,youtubeId,about; final List<String> benefits; }

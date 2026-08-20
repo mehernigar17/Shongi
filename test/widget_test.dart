@@ -7,13 +7,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:shongi/main.dart';
+import 'package:shongi/app/app.dart';
+import 'package:shongi/app/app_dependencies.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(ShongiApp(dependencies: AppDependencies()));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

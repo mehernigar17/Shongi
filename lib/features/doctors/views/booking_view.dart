@@ -1,0 +1,1 @@
+import 'package:flutter/material.dart'; import '../models/doctor.dart'; class BookingView extends StatelessWidget { const BookingView({super.key,required this.doctor}); final Doctor doctor; @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:Text('Book ${doctor.name}')),body:const SizedBox()); }

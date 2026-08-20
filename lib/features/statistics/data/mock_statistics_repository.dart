@@ -1,0 +1,1 @@
+import '../models/statistics_data.dart'; import '../repositories/statistics_repository.dart'; class MockStatisticsRepository implements StatisticsRepository { @override Future<StatisticsData> load(int rangeIndex) async => const StatisticsData(sleepHours:[7,6.5,7.5],cycleDays:[29,31,30]); }

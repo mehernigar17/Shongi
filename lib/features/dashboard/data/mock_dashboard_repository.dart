@@ -1,0 +1,1 @@
+import '../models/dashboard_data.dart'; import '../repositories/dashboard_repository.dart'; class MockDashboardRepository implements DashboardRepository { @override Future<DashboardData> load() async=>const DashboardData(userName:'Aria'); }

@@ -1,0 +1,1 @@
+class Doctor { const Doctor({required this.id,required this.name,required this.specialty,required this.clinic,required this.rating,required this.nextSlot,required this.tags}); final String id,name,specialty,clinic,nextSlot; final double rating; final List<String> tags; }

@@ -1,0 +1,1 @@
+class AppointmentSlot { const AppointmentSlot({required this.id,required this.time,required this.bookedCount,required this.totalSlots}); final String id,time; final int bookedCount,totalSlots; bool get isFull=>bookedCount>=totalSlots; Map<String,dynamic> toJson()=>{'id':id,'time':time,'booked_count':bookedCount,'total_slots':totalSlots}; }

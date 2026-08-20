@@ -1,0 +1,1 @@
+import 'package:flutter/foundation.dart'; import '../models/dashboard_data.dart'; import '../repositories/dashboard_repository.dart'; class DashboardViewModel extends ChangeNotifier { DashboardViewModel(this._repository); final DashboardRepository _repository; DashboardData? data; Future<void> load() async{data=await _repository.load();notifyListeners();} }

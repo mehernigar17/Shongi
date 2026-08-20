@@ -1,0 +1,1 @@
+import '../models/exercise.dart'; import '../repositories/exercise_repository.dart'; class MockExerciseRepository implements ExerciseRepository { @override Future<List<Exercise>> loadExercises() async => const []; }

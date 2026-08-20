@@ -1,0 +1,1 @@
+import '../models/doctor.dart'; import '../repositories/doctor_repository.dart'; class MockDoctorRepository implements DoctorRepository { @override Future<List<Doctor>> loadDoctors() async=>const [Doctor(id:'sarah',name:'Dr Sarah Ahmed',specialty:'Gynecologist',clinic:'City Hospital',rating:4.8,nextSlot:'Tomorrow, 10:00 AM',tags:['PCOS','Hormones'])]; }
