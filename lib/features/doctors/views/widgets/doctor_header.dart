@@ -1,35 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shongi/core/theme/app_colors.dart';
 
 class DoctorHeader extends StatelessWidget {
   const DoctorHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final canPop = Navigator.of(context).canPop();
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text("HealthCare Partners",
-          style:TextStyle(
-            fontSize: 27,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1E1B4B),
-          ) ,
-
-
-
+        if (canPop) ...[
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: chipBackground,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: textColor,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: chipBackground,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Icon(
+            Icons.medical_services_rounded,
+            color: accentColor,
+            size: 22,
+          ),
         ),
-        SizedBox(height: 3,),
-        Text("Trusted specialists for PCOS support",
-              style:TextStyle (
-                fontWeight: FontWeight.w300,
-                fontSize:13,
-                color: Colors.grey[600]
-
-              ),),
-        SizedBox(height: 4),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "HealthCare Partners",
+                style: GoogleFonts.poppins(
+                  color: textColor,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.6,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "Trusted specialists for PCOS & wellness support",
+                style: GoogleFonts.poppins(
+                  color: textSecondary,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
-
     );
   }
 }
+

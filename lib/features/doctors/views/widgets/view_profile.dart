@@ -1,55 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shongi/core/theme/app_colors.dart';
+import 'package:shongi/features/doctors/models/doctor.dart';
 import 'package:shongi/features/doctors/views/widgets/BookingPage.dart';
 
-class DoctorModel {
-  final String name;
-  final String specialty;
-  final double rating;
-  final int reviewCount;
-  final int experienceYears;
-  final String location;
-  final double feePerVisit;
-  final List<String> tags;
-  final String about;
-  final String nextSlot;
-  final String? avatarAsset;
+typedef DoctorModel = Doctor;
 
-  const DoctorModel({
-    required this.name,
-    required this.specialty,
-    required this.rating,
-    required this.reviewCount,
-    required this.experienceYears,
-    required this.location,
-    required this.feePerVisit,
-    required this.tags,
-    required this.about,
-    required this.nextSlot,
-    this.avatarAsset,
-  });
-
-  factory DoctorModel.fromJson(Map<String, dynamic> json) {
-    return DoctorModel(
-      name: json['name'],
-      specialty: json['specialty'],
-      rating: (json['rating'] as num).toDouble(),
-      reviewCount: json['review_count'],
-      experienceYears: json['experience_years'],
-      location: json['location'],
-      feePerVisit: (json['fee_per_visit'] as num).toDouble(),
-      tags: List<String>.from(json['tags']),
-      about: json['about'],
-      nextSlot: json['next_slot'],
-      avatarAsset: json['avatar_asset'],
-    );
-  }
-}
-
-final List<DoctorModel> sampleDoctors = [
-  DoctorModel(
+final List<Doctor> sampleDoctors = [
+  const Doctor(
+    id: 'doc1',
     name: 'Dr. Sarah Mitchell',
     specialty: 'Gynecologist & PCOS Specialist',
+    clinic: 'City Women\'s Hospital',
     rating: 4.9,
     reviewCount: 312,
     experienceYears: 12,
@@ -57,44 +19,13 @@ final List<DoctorModel> sampleDoctors = [
     feePerVisit: 85,
     tags: ['PCOS', 'Hormones', 'Fertility'],
     about:
-    'Dr. Mitchell specializes in PCOS management and hormonal imbalances. '
-        'She takes a holistic approach combining lifestyle interventions with '
-        'evidence-based medicine.',
+        'Dr. Mitchell specializes in PCOS management and hormonal imbalances. She takes a holistic approach combining lifestyle interventions with evidence-based medicine.',
     nextSlot: 'Today, 3:00 PM',
-  ),
-  DoctorModel(
-    name: 'Dr. James Patel',
-    specialty: 'Cardiologist & Heart Failure Specialist',
-    rating: 4.7,
-    reviewCount: 198,
-    experienceYears: 18,
-    location: '2.4 km away',
-    feePerVisit: 120,
-    tags: ['Heart Failure', 'Hypertension', 'ECG'],
-    about:
-    'Dr. Patel is a board-certified cardiologist with expertise in advanced '
-        'heart failure management and interventional procedures.',
-    nextSlot: 'Tomorrow, 10:00 AM',
-  ),
-  DoctorModel(
-    name: 'Dr. Ayesha Rahman',
-    specialty: 'Dermatologist & Skin Care Specialist',
-    rating: 4.8,
-    reviewCount: 245,
-    experienceYears: 9,
-    location: '1.1 km away',
-    feePerVisit: 95,
-    tags: ['Acne', 'Eczema', 'Skin Care'],
-    about:
-    'Dr. Rahman focuses on medical and cosmetic dermatology. She is known '
-        'for her patient-centered care and expertise in chronic skin conditions.',
-    nextSlot: 'Today, 5:30 PM',
   ),
 ];
 
-
 class ViewProfile extends StatelessWidget {
-  final DoctorModel doctor;
+  final Doctor doctor;
   final ScrollController? scrollController;
 
   const ViewProfile({
@@ -103,45 +34,45 @@ class ViewProfile extends StatelessWidget {
     this.scrollController,
   });
 
-
   Widget _buildAvatar() {
     return Container(
-      width: 72,
-      height: 72,
-      decoration: const BoxDecoration(
+      width: 68,
+      height: 68,
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Color(0xFFEADDFF),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFB67BFF), accentColor],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
-      clipBehavior: Clip.hardEdge,
-      child: doctor.avatarAsset != null
-          ? Image.asset(doctor.avatarAsset!, fit: BoxFit.cover)
-          : Center(
+      child: Center(
         child: Text(
-          doctor.name.split(' ').map((e) => e[0]).take(2).join(),
+          doctor.name.split(' ').where((w) => w.isNotEmpty && !w.startsWith('Dr')).isNotEmpty
+              ? doctor.name.split(' ').where((w) => w.isNotEmpty && !w.startsWith('Dr')).map((e) => e[0]).take(2).join()
+              : 'DR',
           style: GoogleFonts.poppins(
             fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF6B4BA3),
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
           ),
         ),
       ),
     );
   }
 
-
   Widget _buildStars(double rating) {
     return Row(
       children: List.generate(5, (i) {
         if (i < rating.floor()) {
-          return const Icon(Icons.star, size: 14, color: Color(0xFFFFC107));
+          return const Icon(Icons.star_rounded, size: 16, color: amberAccent);
         } else if (i < rating) {
-          return const Icon(Icons.star_half, size: 14, color: Color(0xFFFFC107));
+          return const Icon(Icons.star_half_rounded, size: 16, color: amberAccent);
         }
-        return const Icon(Icons.star_border, size: 14, color: Color(0xFFD0D0D0));
+        return const Icon(Icons.star_border_rounded, size: 16, color: Color(0xFFD0D0D0));
       }),
     );
   }
-
 
   Widget _buildHeader(BuildContext context) {
     return Row(
@@ -156,17 +87,18 @@ class ViewProfile extends StatelessWidget {
               Text(
                 doctor.name,
                 style: GoogleFonts.poppins(
-                  fontSize: 16,
+                  fontSize: 17,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1A1A2E),
+                  color: textColor,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 doctor.specialty,
                 style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: Colors.grey.shade500,
+                  fontSize: 12.5,
+                  color: textSecondary,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 6),
@@ -175,11 +107,11 @@ class ViewProfile extends StatelessWidget {
                   _buildStars(doctor.rating),
                   const SizedBox(width: 6),
                   Text(
-                    '${doctor.rating} (${doctor.reviewCount})',
+                    '${doctor.rating.toStringAsFixed(1)} (${doctor.reviewCount})',
                     style: GoogleFonts.poppins(
-                      fontSize: 11.5,
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                      color: textSecondary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -193,16 +125,15 @@ class ViewProfile extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: chipBackground,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.close, size: 16, color: Colors.black54),
+            child: const Icon(Icons.close_rounded, size: 18, color: accentColor),
           ),
         ),
       ],
     );
   }
-
 
   Widget _buildStatCard({
     required IconData icon,
@@ -212,29 +143,32 @@ class ViewProfile extends StatelessWidget {
     return Expanded(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5EDFF),
-          borderRadius: BorderRadius.circular(14),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cardBorderColor),
         ),
         child: Column(
           children: [
-            Icon(icon, size: 18, color: const Color(0xFF6B4BA3)),
+            Icon(icon, size: 18, color: accentColor),
             const SizedBox(height: 4),
             Text(
               label,
               style: GoogleFonts.poppins(
-                fontSize: 10,
-                color: Colors.grey.shade500,
+                fontSize: 10.5,
+                color: textSecondary,
+                fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               value,
+              textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1A1A2E),
+                color: textColor,
               ),
             ),
           ],
@@ -243,14 +177,13 @@ class ViewProfile extends StatelessWidget {
     );
   }
 
-
-  Widget _StatsRow() {
+  Widget _buildStatsRow() {
     return Row(
       children: [
         _buildStatCard(
           icon: Icons.access_time_rounded,
           label: 'Experience',
-          value: '${doctor.experienceYears} years',
+          value: '${doctor.experienceYears} yrs',
         ),
         _buildStatCard(
           icon: Icons.location_on_outlined,
@@ -258,7 +191,7 @@ class ViewProfile extends StatelessWidget {
           value: doctor.location,
         ),
         _buildStatCard(
-          icon: Icons.shield_outlined,
+          icon: Icons.payments_outlined,
           label: 'Fee',
           value: '\$${doctor.feePerVisit.toStringAsFixed(0)}/visit',
         ),
@@ -266,69 +199,76 @@ class ViewProfile extends StatelessWidget {
     );
   }
 
-
   Widget _buildTagsRow() {
     return Wrap(
       spacing: 8,
-      runSpacing: 4,
-      children: doctor.tags
-          .map(
-            (tag) => Chip(
-          label: Text(
+      runSpacing: 6,
+      children: doctor.tags.map((tag) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: chipBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: cardBorderColor),
+          ),
+          child: Text(
             tag,
             style: GoogleFonts.poppins(
-              color: const Color(0xFF6B4BA3),
-              fontSize: 12,
+              color: accentColor,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          backgroundColor: const Color(0xFFF5EDFF),
-          side: const BorderSide(color: Color(0xFFF5EDFF), width: 1),
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-        ),
-      )
-          .toList(),
-
+        );
+      }).toList(),
     );
   }
 
-
-  Widget _About() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'About',
-          style: GoogleFonts.poppins(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF1A1A2E),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          doctor.about,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            height: 1.6,
-            color: Colors.grey.shade600,
-          ),
-        ),
-      ],
-    );
-  }
-
-
-  Widget _NextSlot() {
+  Widget _buildAbout() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFD6F5E8),
-        borderRadius: BorderRadius.circular(14),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cardBorderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'About',
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            doctor.about,
+            style: GoogleFonts.poppins(
+              fontSize: 12.5,
+              height: 1.55,
+              color: textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNextSlot() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: greenBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: greenAccent.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.access_time_rounded,
-              size: 18, color: Color(0xFF2EAA6E)),
+          const Icon(Icons.access_time_rounded, size: 18, color: greenAccent),
           const SizedBox(width: 10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,16 +277,16 @@ class ViewProfile extends StatelessWidget {
                 'Next available slot',
                 style: GoogleFonts.poppins(
                   fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2EAA6E),
+                  fontWeight: FontWeight.w700,
+                  color: greenAccent,
                 ),
               ),
               Text(
                 doctor.nextSlot,
                 style: GoogleFonts.poppins(
                   fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF1A1A2E),
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
                 ),
               ),
             ],
@@ -356,28 +296,33 @@ class ViewProfile extends StatelessWidget {
     );
   }
 
-  Widget _Actions(BuildContext context) {
+  Widget _buildActions(BuildContext context) {
     return Row(
       children: [
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () {
-
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Chat with ${doctor.name} coming soon!'),
+                  backgroundColor: accentColor,
+                ),
+              );
             },
-            icon: const Icon(Icons.chat_bubble_outline,
-                size: 16, color: Color(0xFF6B4BA3)),
+            icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16, color: accentColor),
             label: Text(
               'Message',
               style: GoogleFonts.poppins(
-                color: const Color(0xFF6B4BA3),
+                color: accentColor,
                 fontWeight: FontWeight.w600,
+                fontSize: 13.5,
               ),
             ),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
-              side: const BorderSide(color: Color(0xFFD0B8FF), width: 1.5),
+              side: const BorderSide(color: accentColorLight, width: 1.5),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
           ),
@@ -390,27 +335,27 @@ class ViewProfile extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => BookAppointment(
-                   // id: doctor.id,
                     doctorName: doctor.name,
-
                   ),
                 ),
               );
-
-
             },
-            icon: const Icon(Icons.phone_outlined, size: 16),
+            icon: const Icon(Icons.calendar_today_rounded, size: 16, color: Colors.white),
             label: Text(
               'Book Now',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                fontSize: 13.5,
+                color: Colors.white,
+              ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6B4BA3),
+              backgroundColor: accentColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
           ),
@@ -419,44 +364,42 @@ class ViewProfile extends StatelessWidget {
     );
   }
 
-
-  Widget _DragHandle() {
+  Widget _buildDragHandle() {
     return Center(
       child: Container(
         width: 40,
         height: 4,
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.grey.shade300,
+          color: cardBorderColor,
           borderRadius: BorderRadius.circular(2),
         ),
       ),
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 32),
       child: ListView(
         controller: scrollController,
         shrinkWrap: true,
         children: [
-          _DragHandle(),
+          _buildDragHandle(),
           _buildHeader(context),
-          const SizedBox(height: 20),
-          _StatsRow(),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
+          _buildStatsRow(),
+          const SizedBox(height: 14),
           _buildTagsRow(),
-          const SizedBox(height: 20),
-          _About(),
           const SizedBox(height: 16),
-          _NextSlot(),
+          _buildAbout(),
+          const SizedBox(height: 14),
+          _buildNextSlot(),
           const SizedBox(height: 20),
-          _Actions(context),
+          _buildActions(context),
         ],
       ),
     );
   }
-}
+}

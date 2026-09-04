@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shongi/core/theme/app_colors.dart';
 
 class ProfileStats extends StatelessWidget {
-  const ProfileStats({super.key});
+  final String streak;
+  final String logs;
+  final String level;
+
+  const ProfileStats({
+    super.key,
+    this.streak = "14d",
+    this.logs = "86",
+    this.level = "Silver",
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -11,37 +21,36 @@ class ProfileStats extends StatelessWidget {
         Expanded(
           child: statCard(
             icon: Icons.local_fire_department_rounded,
-            iconColor: const Color(0xFFE85D75),
-            value: "14d",
+            iconColor: pinkAccent,
+            value: streak,
             title: "Streak",
-            valueColor: const Color(0xFFE85D75),
-            cardColor: const Color(0xFFFFE7EE),
+            valueColor: pinkAccent,
+            cardColor: pinkBackground,
+            borderColor: const Color(0xFFFFD4DF),
           ),
         ),
-
         const SizedBox(width: 10),
-
         Expanded(
           child: statCard(
-            icon: Icons.favorite_border_rounded,
-            iconColor: const Color(0xFF8B5CF6),
-            value: "86",
+            icon: Icons.favorite_rounded,
+            iconColor: accentColor,
+            value: logs,
             title: "Logs",
-            valueColor: const Color(0xFF6B21A8),
-            cardColor: const Color(0xFFF3ECFF),
+            valueColor: accentColor,
+            cardColor: chipBackground,
+            borderColor: cardBorderColor,
           ),
         ),
-
         const SizedBox(width: 10),
-
         Expanded(
           child: statCard(
-            icon: Icons.emoji_events_outlined,
-            iconColor: const Color(0xFFE6A400),
-            value: "Silver",
+            icon: Icons.emoji_events_rounded,
+            iconColor: amberAccent,
+            value: level,
             title: "Level",
-            valueColor: const Color(0xFFC68A00),
-            cardColor: const Color(0xFFFFF3D6),
+            valueColor: const Color(0xFF9E6B00),
+            cardColor: amberBackground,
+            borderColor: const Color(0xFFFFECC0),
           ),
         ),
       ],
@@ -55,15 +64,22 @@ class ProfileStats extends StatelessWidget {
     required String title,
     required Color valueColor,
     required Color cardColor,
+    required Color borderColor,
   }) {
     return Container(
-      height: 110,
-
+      height: 105,
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: iconColor.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -72,30 +88,26 @@ class ProfileStats extends StatelessWidget {
             color: iconColor,
             size: 22,
           ),
-
-          const SizedBox(height: 8),
-
+          const SizedBox(height: 6),
           Text(
             value,
             style: GoogleFonts.poppins(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
               color: valueColor,
             ),
           ),
-
           const SizedBox(height: 2),
-
           Text(
             title,
             style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: Colors.grey.shade700,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+              color: textSecondary,
             ),
           ),
         ],
       ),
     );
   }
-}
+}

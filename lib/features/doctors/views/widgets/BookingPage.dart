@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:shongi/core/theme/app_colors.dart';
 
 class TimeSlotModel {
   final String id;
@@ -45,60 +45,49 @@ class AppointmentDayModel {
   });
 }
 
-
 abstract class AppointmentRepository {
   Future<List<TimeSlotModel>> fetchSlots(String doctorId, DateTime date);
   Future<bool> bookSlot(String doctorId, DateTime date, String slotId);
 }
 
-
 class MockAppointmentRepository implements AppointmentRepository {
   @override
-  Future<List<TimeSlotModel>> fetchSlots(
-      String doctorId, DateTime date) async {
-    // TODO: replace with real API call
-
-    await Future.delayed(const Duration(milliseconds: 300)); // simulates network
+  Future<List<TimeSlotModel>> fetchSlots(String doctorId, DateTime date) async {
+    await Future.delayed(const Duration(milliseconds: 200));
     return _mockSlots;
   }
 
   @override
-  Future<bool> bookSlot(
-      String doctorId, DateTime date, String slotId) async {
-
-    await Future.delayed(const Duration(milliseconds: 300));
+  Future<bool> bookSlot(String doctorId, DateTime date, String slotId) async {
+    await Future.delayed(const Duration(milliseconds: 250));
     return true;
   }
 
   static const List<TimeSlotModel> _mockSlots = [
-    TimeSlotModel(id: 's1',  time: '9:00 AM',  bookedCount: 3, totalSlots: 3),
-    TimeSlotModel(id: 's2',  time: '9:30 AM',  bookedCount: 2, totalSlots: 3),
-    TimeSlotModel(id: 's3',  time: '10:00 AM', bookedCount: 1, totalSlots: 3),
-    TimeSlotModel(id: 's4',  time: '10:30 AM', bookedCount: 0, totalSlots: 3),
-    TimeSlotModel(id: 's5',  time: '11:00 AM', bookedCount: 3, totalSlots: 3),
-    TimeSlotModel(id: 's6',  time: '11:30 AM', bookedCount: 1, totalSlots: 3),
-    TimeSlotModel(id: 's7',  time: '2:00 PM',  bookedCount: 0, totalSlots: 3),
-    TimeSlotModel(id: 's8',  time: '2:30 PM',  bookedCount: 2, totalSlots: 3),
-    TimeSlotModel(id: 's9',  time: '3:00 PM',  bookedCount: 0, totalSlots: 3),
-    TimeSlotModel(id: 's10', time: '3:30 PM',  bookedCount: 1, totalSlots: 3),
-    TimeSlotModel(id: 's11', time: '4:00 PM',  bookedCount: 0, totalSlots: 3),
-    TimeSlotModel(id: 's12', time: '4:30 PM',  bookedCount: 2, totalSlots: 3),
+    TimeSlotModel(id: 's1', time: '9:00 AM', bookedCount: 3, totalSlots: 3),
+    TimeSlotModel(id: 's2', time: '9:30 AM', bookedCount: 2, totalSlots: 3),
+    TimeSlotModel(id: 's3', time: '10:00 AM', bookedCount: 1, totalSlots: 3),
+    TimeSlotModel(id: 's4', time: '10:30 AM', bookedCount: 0, totalSlots: 3),
+    TimeSlotModel(id: 's5', time: '11:00 AM', bookedCount: 3, totalSlots: 3),
+    TimeSlotModel(id: 's6', time: '11:30 AM', bookedCount: 1, totalSlots: 3),
+    TimeSlotModel(id: 's7', time: '2:00 PM', bookedCount: 0, totalSlots: 3),
+    TimeSlotModel(id: 's8', time: '2:30 PM', bookedCount: 2, totalSlots: 3),
+    TimeSlotModel(id: 's9', time: '3:00 PM', bookedCount: 0, totalSlots: 3),
+    TimeSlotModel(id: 's10', time: '3:30 PM', bookedCount: 1, totalSlots: 3),
+    TimeSlotModel(id: 's11', time: '4:00 PM', bookedCount: 0, totalSlots: 3),
+    TimeSlotModel(id: 's12', time: '4:30 PM', bookedCount: 2, totalSlots: 3),
   ];
 }
 
-
-
 class BookAppointment extends StatefulWidget {
-
   final String doctorName;
   final AppointmentRepository repository;
 
-   BookAppointment({
+  BookAppointment({
     super.key,
-
     required this.doctorName,
     AppointmentRepository? repository,
-  }) : repository = repository ??   MockAppointmentRepository();
+  }) : repository = repository ?? MockAppointmentRepository();
 
   @override
   State<BookAppointment> createState() => BookAppointmentState();
@@ -111,8 +100,15 @@ class BookAppointmentState extends State<BookAppointment> {
 
   List<TimeSlotModel> slots = [];
   bool isLoadingSlots = false;
+  bool isBooking = false;
 
-
+  static const List<String> kDayNames = [
+    'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
+  ];
+  static const List<String> kMonthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
 
   @override
   void initState() {
@@ -124,8 +120,8 @@ class BookAppointmentState extends State<BookAppointment> {
 
   Future<void> loadSlots() async {
     setState(() => isLoadingSlots = true);
-    final result =
-    await widget.repository.fetchSlots(widget.doctorName, selectedDate);
+    final result = await widget.repository.fetchSlots(widget.doctorName, selectedDate);
+    if (!mounted) return;
     setState(() {
       slots = result;
       isLoadingSlots = false;
@@ -142,33 +138,69 @@ class BookAppointmentState extends State<BookAppointment> {
 
   Future<void> onConfirmBooking() async {
     if (selectedSlot == null) return;
+    setState(() => isBooking = true);
     final success = await widget.repository.bookSlot(
       widget.doctorName,
       selectedDate,
       selectedSlot!.id,
     );
     if (!mounted) return;
+    setState(() => isBooking = false);
     if (success) {
-      // TODO: navigate to confirmation screen
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Appointment booked successfully!')),
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: greenBackground,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.check_circle_rounded, color: greenAccent, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Confirmed!',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: textColor,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Appointment booked with ${widget.doctorName} on ${kMonthNames[selectedDate.month - 1]} ${selectedDate.day} at ${selectedSlot!.time}.',
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: textSecondary,
+              height: 1.5,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Done',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: accentColor,
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     }
   }
-
-
-
-  static const Color kPrimary = Color(0xFF6B4BA3);
-  static const Color kPrimaryLight = Color(0xFFD0B8FF);
-  static const Color kDark = Color(0xFF1A1A2E);
-  static const List<String> kDayNames = [
-    'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
-  ];
-  static const List<String> kMonthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ];
-
 
   Widget buildHeader() {
     return Container(
@@ -176,7 +208,7 @@ class BookAppointmentState extends State<BookAppointment> {
       padding: const EdgeInsets.fromLTRB(20, 52, 20, 24),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [kPrimary, Color(0xFF6B4BA3)],
+          colors: [accentColor, accentColorDeep],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -189,7 +221,7 @@ class BookAppointmentState extends State<BookAppointment> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.arrow_back_ios, size: 16, color: Colors.white),
+                const Icon(Icons.arrow_back_ios_rounded, size: 16, color: Colors.white),
                 const SizedBox(width: 4),
                 Text(
                   'Back',
@@ -216,7 +248,7 @@ class BookAppointmentState extends State<BookAppointment> {
             widget.doctorName,
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
             ),
           ),
         ],
@@ -224,25 +256,22 @@ class BookAppointmentState extends State<BookAppointment> {
     );
   }
 
-
-
   Widget buildSectionLabel({required IconData icon, required String label}) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: kPrimary),
+        Icon(icon, size: 18, color: accentColor),
         const SizedBox(width: 8),
         Text(
           label,
           style: GoogleFonts.poppins(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: kDark,
+            color: textColor,
           ),
         ),
       ],
     );
   }
-
 
   Widget buildDateCard(DateTime date) {
     final isSelected = date.day == selectedDate.day &&
@@ -256,14 +285,21 @@ class BookAppointmentState extends State<BookAppointment> {
         width: 58,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
-          color: isSelected ? kPrimary : Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          color: isSelected ? accentColor : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? kPrimary : Colors.grey.shade200,
+            color: isSelected ? accentColor : cardBorderColor,
             width: isSelected ? 2 : 1,
           ),
+          boxShadow: [
+            if (isSelected)
+              BoxShadow(
+                color: accentColor.withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+          ],
         ),
-
         child: FittedBox(
           fit: BoxFit.scaleDown,
           child: Padding(
@@ -277,8 +313,8 @@ class BookAppointmentState extends State<BookAppointment> {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     color: isSelected
-                        ? Colors.white.withOpacity(0.8)
-                        : Colors.grey.shade500,
+                        ? Colors.white.withValues(alpha: 0.8)
+                        : textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -287,7 +323,7 @@ class BookAppointmentState extends State<BookAppointment> {
                   style: GoogleFonts.poppins(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: isSelected ? Colors.white : kDark,
+                    color: isSelected ? Colors.white : textColor,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -296,8 +332,8 @@ class BookAppointmentState extends State<BookAppointment> {
                   style: GoogleFonts.poppins(
                     fontSize: 11,
                     color: isSelected
-                        ? Colors.white.withOpacity(0.8)
-                        : Colors.grey.shade500,
+                        ? Colors.white.withValues(alpha: 0.8)
+                        : textSecondary,
                   ),
                 ),
               ],
@@ -307,8 +343,6 @@ class BookAppointmentState extends State<BookAppointment> {
       ),
     );
   }
-
-
 
   Widget buildDatePicker() {
     return Column(
@@ -331,7 +365,6 @@ class BookAppointmentState extends State<BookAppointment> {
     );
   }
 
-
   Widget buildTimeSlotCard(TimeSlotModel slot) {
     final isSelected = selectedSlot?.id == slot.id;
 
@@ -341,32 +374,30 @@ class BookAppointmentState extends State<BookAppointment> {
     Color subColor;
 
     if (slot.isFull) {
-      borderColor = Colors.grey.shade200;
-      bgColor = Colors.grey.shade50;
-      timeColor = Colors.grey.shade400;
+      borderColor = cardBorderColor;
+      bgColor = const Color(0xFFF7F7FA);
+      timeColor = textSecondary.withValues(alpha: 0.5);
       subColor = const Color(0xFFE53935);
     } else if (isSelected) {
-      borderColor = kPrimary;
-      bgColor = kPrimaryLight;
-      timeColor = kPrimary;
-      subColor = kPrimary;
+      borderColor = accentColor;
+      bgColor = chipBackground;
+      timeColor = accentColor;
+      subColor = accentColor;
     } else {
-      borderColor = Colors.grey.shade200;
+      borderColor = cardBorderColor;
       bgColor = Colors.white;
-      timeColor = kDark;
-      subColor = Colors.grey.shade500;
+      timeColor = textColor;
+      subColor = textSecondary;
     }
 
     return GestureDetector(
-      onTap: slot.isFull
-          ? null
-          : () => setState(() => selectedSlot = slot),
+      onTap: slot.isFull ? null : () => setState(() => selectedSlot = slot),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: borderColor, width: isSelected ? 1.5 : 1),
         ),
         child: FittedBox(
@@ -386,34 +417,33 @@ class BookAppointmentState extends State<BookAppointment> {
               const SizedBox(height: 4),
               slot.isFull
                   ? Text(
-                'Full',
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: subColor,
-                ),
-              )
+                      'Full',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: subColor,
+                      ),
+                    )
                   : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.people_outline, size: 11, color: subColor),
-                  const SizedBox(width: 2),
-                  Text(
-                    '${slot.remaining}/${slot.totalSlots}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      color: subColor,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.people_outline_rounded, size: 11, color: subColor),
+                        const SizedBox(width: 2),
+                        Text(
+                          '${slot.remaining}/${slot.totalSlots}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: subColor,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
       ),
     );
   }
-
 
   Widget buildTimeGrid() {
     return Column(
@@ -426,29 +456,26 @@ class BookAppointmentState extends State<BookAppointment> {
         const SizedBox(height: 14),
         isLoadingSlots
             ? const Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: CircularProgressIndicator(color: kPrimary),
-          ),
-        )
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: CircularProgressIndicator(color: accentColor),
+                ),
+              )
             : GridView.builder(
-          physics: const NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          gridDelegate:
-          const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 2.4,
-          ),
-          itemCount: slots.length,
-          itemBuilder: (context, index) =>
-              buildTimeSlotCard(slots[index]),
-        ),
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 2.3,
+                ),
+                itemCount: slots.length,
+                itemBuilder: (context, index) => buildTimeSlotCard(slots[index]),
+              ),
       ],
     );
   }
-
 
   Widget buildSlotInfo() {
     if (selectedSlot == null) return const SizedBox.shrink();
@@ -460,7 +487,8 @@ class BookAppointmentState extends State<BookAppointment> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: const Color(0xFFEFF6FF),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFBFDBFE)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,10 +522,10 @@ class BookAppointmentState extends State<BookAppointment> {
                   const SizedBox(height: 2),
                   Text(
                     '${selectedSlot!.bookedCount} '
-                        '${selectedSlot!.bookedCount == 1 ? 'person has' : 'people have'} '
-                        'already booked this slot. '
-                        'Only ${selectedSlot!.remaining} '
-                        'slot${selectedSlot!.remaining == 1 ? '' : 's'} remaining!',
+                    '${selectedSlot!.bookedCount == 1 ? 'person has' : 'people have'} '
+                    'already booked this slot. '
+                    'Only ${selectedSlot!.remaining} '
+                    'slot${selectedSlot!.remaining == 1 ? '' : 's'} remaining!',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       color: const Color(0xFF3B82F6),
@@ -513,39 +541,42 @@ class BookAppointmentState extends State<BookAppointment> {
     );
   }
 
-
-
   Widget buildConfirmButton() {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: selectedSlot == null ? null : onConfirmBooking,
+        onPressed: selectedSlot == null || isBooking ? null : onConfirmBooking,
         style: ElevatedButton.styleFrom(
-          backgroundColor: kPrimary,
-          disabledBackgroundColor: const Color(0xFFD8B4FE),
+          backgroundColor: accentColor,
+          disabledBackgroundColor: accentColorLight.withValues(alpha: 0.5),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
           ),
         ),
-        child: Text(
-          'Confirm Booking',
-          style: GoogleFonts.poppins(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        child: isBooking
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+              )
+            : Text(
+                'Confirm Booking',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
       ),
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: pageBackground,
       body: Column(
         children: [
           buildHeader(),

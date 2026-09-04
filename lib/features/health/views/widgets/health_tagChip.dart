@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shongi/core/theme/app_colors.dart';
 
 class HealthTagchip extends StatelessWidget {
   final String text;
@@ -19,29 +20,45 @@ class HealthTagchip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: ontap,
-      child: FilterChip(
-        avatar: Icon(
-          icon,
-          color: isSelected ? Colors.white : Colors.deepPurple,
-          size: 18,
-        ),
-        label: Text(
-          text,
-          style: GoogleFonts.poppins(
-            color: isSelected ? Colors.white : Colors.deepPurple,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: isSelected ? accentColor : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? accentColor : cardBorderColor,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: accentColor.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
         ),
-        selected: isSelected,
-        onSelected: (_) => ontap(),
-        showCheckmark: false,
-        selectedColor: Colors.deepPurple,
-        backgroundColor: const Color(0xFFF5EDFF),
-        side: BorderSide(
-          color: isSelected ? Colors.deepPurple : const Color(0xFFF5EDFF),
-          width: 2,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : accentColor,
+              size: 16,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              text,
+              style: GoogleFonts.poppins(
+                color: isSelected ? Colors.white : accentColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-}
+}

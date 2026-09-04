@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shongi/features/health/views/widgets/exercise_modal.dart';
+import 'package:shongi/core/theme/app_colors.dart';
+import 'package:shongi/features/health/models/exercise.dart';
 
 class ExerciseCard extends StatelessWidget {
-  final ExerciseModel exercise;
+  final Exercise exercise;
   final VoidCallback onTap;
 
   const ExerciseCard({
@@ -14,26 +15,29 @@ class ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isBeginner = exercise.level.toLowerCase().contains("beg");
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: const Color(0xffE9DDF9),
+          color: cardBorderColor,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: accentColor.withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
@@ -43,98 +47,108 @@ class ExerciseCard extends StatelessWidget {
                       exercise.title,
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w700,
-                        fontSize: 20,
-                        color: const Color(0xff27247D),
+                        fontSize: 17,
+                        color: textColor,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       exercise.category,
                       style: GoogleFonts.poppins(
-                        color: Colors.grey.shade600,
+                        color: textSecondary,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
-
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+                  horizontal: 12,
+                  vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xffD5F2DF),
-                  borderRadius: BorderRadius.circular(20),
+                  color: isBeginner ? greenBackground : chipBackground,
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
                   exercise.level,
                   style: GoogleFonts.poppins(
-                    color: const Color(0xff006B4E),
-                    fontWeight: FontWeight.w600,
+                    color: isBeginner ? greenAccent : accentColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
                   ),
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 14),
-
           Row(
             children: [
               Icon(
-                Icons.access_time_outlined,
-                color: Colors.deepPurple,
-                size: 18,
+                Icons.access_time_rounded,
+                color: accentColor,
+                size: 16,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 5),
               Text(
                 exercise.duration,
                 style: GoogleFonts.poppins(
-                  color: Colors.deepPurple,
+                  color: textColor.withValues(alpha: 0.8),
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-
-              const SizedBox(width: 22),
-
+              const SizedBox(width: 18),
               const Icon(
-                Icons.local_fire_department_outlined,
-                color: Colors.pink,
-                size: 18,
+                Icons.local_fire_department_rounded,
+                color: pinkAccent,
+                size: 16,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 5),
               Text(
                 exercise.calories,
                 style: GoogleFonts.poppins(
-                  color: Colors.pink,
+                  color: textColor.withValues(alpha: 0.8),
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 18),
-
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
+            height: 44,
             child: ElevatedButton(
               onPressed: onTap,
               style: ElevatedButton.styleFrom(
                 elevation: 0,
-                backgroundColor: const Color(0xffEEE4F8),
-                foregroundColor: Colors.deepPurple,
+                backgroundColor: chipBackground,
+                foregroundColor: accentColor,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                child: Text(
-                  "Know more →",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Know more",
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: accentColor,
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 16,
+                    color: accentColor,
+                  ),
+                ],
               ),
             ),
           ),
@@ -142,4 +156,4 @@ class ExerciseCard extends StatelessWidget {
       ),
     );
   }
-}
+}

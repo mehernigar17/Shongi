@@ -1,261 +1,164 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shongi/core/theme/app_colors.dart';
 
-class ReportPrevieweport extends StatefulWidget {
-  const ReportPrevieweport({super.key});
+class ReportPreview extends StatelessWidget {
+  const ReportPreview({super.key});
 
-  @override
-  State<ReportPrevieweport> createState() => _ReportPrevieweportState();
-}
-
-class _ReportPrevieweportState extends State<ReportPrevieweport> {
   @override
   Widget build(BuildContext context) {
-
-
-
-
-
-
-
-
-
-
-
-    return SizedBox(
+    return Container(
       width: double.infinity,
-     //height: 400,
-
-
-     child:  Container(
-
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow:[
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: cardBorderColor),
+        boxShadow: [
           BoxShadow(
-          color: Colors.black.withOpacity(0.12),
-            blurRadius: 20,
-            spreadRadius: 2,
-            offset:Offset (0,8)
-
-        ),
-
-
-         ]
+            color: accentColor.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
-
-         child: Padding(
-           padding: EdgeInsets.symmetric(
-             horizontal: 20,
-             vertical: 20,
-           ),
-       child:Column(
-         crossAxisAlignment: CrossAxisAlignment.start,
-       children: [
-       Row(
-
-
-       children: [
-         Icon(Icons.summarize
-         ,color:Color(0xFF6B4BA3)
-           ,),
-         SizedBox(width: 9,),
-         Text("Report Preview",
-         style: TextStyle(
-           color: Color(0xFF1E1B4B),
-           fontSize: 14,
-           fontWeight: FontWeight.bold,
-         ),),
-         SizedBox(width: 65,),
-         Container(
-           padding: EdgeInsets.symmetric(
-             horizontal: 10,
-             vertical: 4,
-           ),
-           height: 20,
-           decoration: BoxDecoration(
-             borderRadius: BorderRadius.circular(10),
-             color:Color(0xFFF5EDFF),
-
-           ),
-         child: Text("Last Updated Today",
-         style: TextStyle(
-           fontSize: 10,
-           fontWeight: FontWeight.w300,
-           color: Color( 0xFF6B21A8)
-         ),
-         ),
-         ),
-
-
-
-
-       ],
-       ),
-         SizedBox(height: 20),
-         // CARD 1
-         buildReportCard(
-           "Cycle History",
-           "Irregular — avg 30 days",
-            Icons.sync,
-         ),
-
-         SizedBox(height: 12),
-
-         // CARD 2
-         buildReportCard(
-           "Main Symptoms",
-           "Fatigue, mood swings",
-           Icons.notes,
-         ),
-
-         SizedBox(height: 12),
-
-         // CARD 3
-         buildReportCard(
-           "Lifestyle",
-           "Moderate activity, avg 7.1h sleep",
-           Icons.nature,
-         ),
-
-         SizedBox(height: 12),
-
-         // CARD 4
-         buildReportCard(
-           "Last 30 Days",
-           "28 logs completed",
-           Icons.bar_chart,
-         ),
-
-
-
-
-
-
-
-
-
-
-
-
-       ]
-       )
-
-    )
-
-
-
-
-     ),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: chipBackground,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.summarize_rounded,
+                      color: accentColor,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    "Report Preview",
+                    style: GoogleFonts.poppins(
+                      color: textColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: chipBackground,
+                ),
+                child: Text(
+                  "Updated Today",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: accentColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          buildReportCard(
+            "Cycle History",
+            "Irregular — avg 30 days",
+            Icons.sync_rounded,
+          ),
+          const SizedBox(height: 10),
+          buildReportCard(
+            "Main Symptoms",
+            "Fatigue, mood swings",
+            Icons.notes_rounded,
+          ),
+          const SizedBox(height: 10),
+          buildReportCard(
+            "Lifestyle",
+            "Moderate activity, avg 7.1h sleep",
+            Icons.spa_rounded,
+          ),
+          const SizedBox(height: 10),
+          buildReportCard(
+            "Last 30 Days",
+            "28 logs completed",
+            Icons.bar_chart_rounded,
+          ),
+        ],
+      ),
     );
-
-
   }
-  //REUSABLE CARD WIDGET
+
   Widget buildReportCard(
-      String title,
-      String value,
-      IconData icon,
-      ){
+    String title,
+    String value,
+    IconData icon,
+  ) {
     return Container(
-      padding: EdgeInsets.all(14),
-
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color:Color(0xFFF5EDFF),
-
+        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFFF9F5FE),
+        border: Border.all(color: cardBorderColor.withValues(alpha: 0.5)),
       ),
-
-
-
-
-
-
-
-
-
-
-
-
-
       child: Row(
         children: [
-
-          // ICON BOX
           Container(
-            height: 42,
-            width: 42,
+            height: 38,
+            width: 38,
             alignment: Alignment.center,
-
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: cardBorderColor),
             ),
-
             child: Icon(
               icon,
               size: 18,
-              color: Color(0xFF6B4BA3),
+              color: accentColor,
             ),
           ),
-
-          SizedBox(width: 12),
-
-          // TEXT SECTION
+          const SizedBox(width: 12),
           Expanded(
-            child:SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-
                 Text(
                   title,
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
+                  style: GoogleFonts.poppins(
+                    color: textSecondary,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-
-                SizedBox(height: 4),
-
+                const SizedBox(height: 2),
                 Text(
                   value,
-                  style: TextStyle(
-                    color: Color(0xFF2D3142),
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+                  style: GoogleFonts.poppins(
+                    color: textColor,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
             ),
           ),
-          )
         ],
-
       ),
     );
   }
-
-
-
-  }
-
+}

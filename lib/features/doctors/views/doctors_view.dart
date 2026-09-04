@@ -1,97 +1,81 @@
 import 'package:flutter/material.dart';
-import 'package:shongi/features/doctors/views/widgets/doctor_pdf_file.dart';
-import 'package:shongi/features/doctors/views/widgets/doctor_header.dart';
-import 'package:shongi/features/doctors/views/widgets/report_preview.dart';
+import 'package:shongi/core/theme/app_colors.dart';
+import 'package:shongi/features/doctors/data/mock_doctor_repository.dart';
+import 'package:shongi/features/doctors/viewmodels/doctors_view_model.dart';
 import 'package:shongi/features/doctors/views/widgets/Recommended_Doctor.dart';
+import 'package:shongi/features/doctors/views/widgets/doctor_header.dart';
+import 'package:shongi/features/doctors/views/widgets/doctor_pdf_file.dart';
+import 'package:shongi/features/doctors/views/widgets/report_preview.dart';
+
 class DoctorsScreen extends StatefulWidget {
-  const DoctorsScreen({super.key});
+  final DoctorsViewModel? viewModel;
+
+  const DoctorsScreen({super.key, this.viewModel});
 
   @override
   State<DoctorsScreen> createState() => _DoctorsScreenState();
 }
 
 class _DoctorsScreenState extends State<DoctorsScreen> {
+  late final DoctorsViewModel _viewModel;
+  bool _ownsViewModel = false;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.viewModel != null) {
+      _viewModel = widget.viewModel!;
+    } else {
+      _viewModel = DoctorsViewModel(MockDoctorRepository());
+      _ownsViewModel = true;
+    }
+  }
 
-
-
-
-
-
-
-
-
-
-
-  final List<Doctor> doctor = [
-
-    Doctor(
-      name: "Dr Sarah Ahmed",
-      speciality: "Gynecologist",
-      clinic: "City Hospital",
-      rating: "4.8",
-      time: "Tomorrow , 10:00 AM",
-      tags: ["PCOS", "Hormones" ,"jfnj"],
-    ),
-
-    Doctor(
-      name: "Dr Emily",
-      speciality: "Nutritionist",
-      clinic: "Care Clinic",
-      rating: "4.7",
-      time: "Tommorrow , 1:00 PM",
-      tags: ["Diet", "Weight Loss"],
-    ),
-
-    Doctor(
-      name: "Dr John",
-      speciality: "Dermatologist",
-      clinic: "Skin Center",
-      rating: "4.9",
-      time: "Tommorow , 3:30 PM",
-      tags: ["Acne", "Skin Care"],
-    ),
-  ];
-
-
-
-
-
-
-
-
-
+  @override
+  void dispose() {
+    if (_ownsViewModel) {
+      _viewModel.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-
-
+      backgroundColor: pageBackground,
       body: SafeArea(
-        child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children:  [
-              SizedBox(height: 10),
-              DoctorHeader(),
-              SizedBox(height: 20),
-              DoctorPdfFile(),
-              SizedBox(height: 20),
-              ReportPrevieweport(),
-              SizedBox(height: 28),
-              RecommendedDoctor( doctor: doctor,),
-              const SizedBox(height: 100),
-
-
-
-            ],
-          ),
+        child: AnimatedBuilder(
+          animation: _viewModel,
+          builder: (context, _) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 15),
+                  const DoctorHeader(),
+                  const SizedBox(height: 20),
+                  const DoctorPdfFile(),
+                  const SizedBox(height: 20),
+                  const ReportPreview(),
+                  const SizedBox(height: 24),
+                  if (_viewModel.isLoading)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: CircularProgressIndicator(color: accentColor),
+                      ),
+                    )
+                  else
+                    RecommendedDoctor(doctor: _viewModel.doctors),
+                  const SizedBox(height: 100),
+                ],
+              ),
+            );
+          },
         ),
-      ),
       ),
     );
   }
 }
+

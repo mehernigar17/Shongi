@@ -1,130 +1,121 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-class DoctorPdfFile extends StatefulWidget {
-  const DoctorPdfFile({super.key});
+import 'package:shongi/core/theme/app_colors.dart';
 
-  @override
-  State<DoctorPdfFile> createState() => _DoctorPdfFileState();
-}
+class DoctorPdfFile extends StatelessWidget {
+  final VoidCallback? onGenerateReport;
 
-class _DoctorPdfFileState extends State<DoctorPdfFile> {
+  const DoctorPdfFile({super.key, this.onGenerateReport});
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      height: 150,
-
-     child:
-     Container(
-
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-        begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors:[
-              Color(0xFF2E0854),
-              Color(0xFF6A1B9A),
-              Color(0xFFBA68C8),
-            ],
-             )
-
-
-
+        borderRadius: BorderRadius.circular(26),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF7A58B8),
+            Color(0xFF53338A),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.25),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-       child: Column(
-         crossAxisAlignment: CrossAxisAlignment.start,
-         children: [
-           Padding(
-
-             padding:  EdgeInsets.only(left: 15, top: 15, right: 15),
-             child: Row(
-             children: [
-               Container(
-                 decoration: BoxDecoration(
-                   color: Colors.white.withOpacity(0.2),
-                   borderRadius: BorderRadius.circular(10),
-                 ),
-                 //child: Icon(Icons.description,size: 37,color: Colors.white,),
-                  child:  Padding(
-                     padding: EdgeInsets.all(8),
-                     child: Icon(
-                       Icons.description,
-                       size: 37,
-                       color: Colors.white,
-                     ),
-                   )
-               ),
-               SizedBox(width: 15,),
-               Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 children: [
-                   Text("Health Report",
-                   style:GoogleFonts.poppins(
-                       fontSize: 22,
-                       fontWeight: FontWeight.bold,
-                        color: Colors.white
-
-                   ),),
-                   Text("Share With Your Doctor",
-                     style: GoogleFonts.poppins(
-                         fontWeight: FontWeight.w300,
-                         fontSize:13,
-                         color: Colors.white70
-
-                     ),)
-                 ]
-
-               )
-             ],
-
-           ),
-           ),
-           SizedBox(height: 13),
-           Center(
-          child:  SizedBox(
-             width: 350,
-             height: 40,
-
-             child: Container(
-               padding: EdgeInsets.all(5),
-               alignment: Alignment.center,
-               decoration: BoxDecoration(
-                 color: Colors.white.withOpacity(0.18),
-                 borderRadius: BorderRadius.circular(12),
-                 border: Border.all(
-                   color: Colors.white,
-                   width: 1,
-                 ),
-               ),
-
-               child:  Row(
-                   mainAxisAlignment: MainAxisAlignment.center,
-                   children: [
-                     Icon(
-                       Icons.download,
-                       color: Colors.white,
-                       size: 24,
-                     ),
-                     SizedBox(width: 4),
-                     Text("Generate Pdf Report",
-                       style: GoogleFonts.poppins(
-                           fontSize: 12,
-                           fontWeight: FontWeight.bold,
-                           color: Colors.white
-                       ),
-                     ),
-                   ]
-               ),
-
-             ),
-           )
-           ),
-
-         ],
-       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.description_rounded,
+                  size: 26,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Health Report",
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "Share comprehensive summary with your doctor",
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                if (onGenerateReport != null) {
+                  onGenerateReport!();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Generating PDF Report...'),
+                      backgroundColor: accentColor,
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.download_rounded, size: 18, color: Colors.white),
+              label: Text(
+                "Generate PDF Report",
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
-
   }
 }
+
