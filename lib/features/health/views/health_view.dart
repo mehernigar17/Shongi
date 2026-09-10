@@ -7,8 +7,8 @@ import 'package:shongi/features/health/views/widgets/header_tagchips_healthPage.
 import 'package:shongi/features/health/views/widgets/personalizedplan_healthpage.dart';
 import 'package:shongi/features/health/views/widgets/exerciseLibrary_healthPage.dart';
 
+import 'package:shongi/features/haircare/views/haircare_view.dart';
 import 'package:shongi/features/skincare/views/skincare_view.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class HealthScreen extends StatefulWidget {
   final HealthViewModel? viewModel;
@@ -75,7 +75,7 @@ class _HealthScreenState extends State<HealthScreen> {
                   if (_viewModel.hubTag == "Skin Care")
                     const SkincareView()
                   else if (_viewModel.hubTag == "Hair Care")
-                    _buildHairCarePlaceholder()
+                    const HaircareView()
                   else ...[
                     PersonalizedplanHealthpage(
                       plans: _viewModel.workoutPlans,
@@ -93,45 +93,6 @@ class _HealthScreenState extends State<HealthScreen> {
             );
           },
         ),
-      ),
-    );
-  }
-
-  Widget _buildHairCarePlaceholder() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cardBorderColor),
-      ),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.content_cut_rounded,
-            size: 48,
-            color: accentColor,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Hair Care Routines',
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: textColor,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tailored hair wash, oiling, and scalp health routines coming soon!',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              color: textSecondary,
-            ),
-          ),
-        ],
       ),
     );
   }
