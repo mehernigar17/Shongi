@@ -7,29 +7,9 @@ class DoctorHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canPop = Navigator.of(context).canPop();
-
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (canPop) ...[
-          GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: chipBackground,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: textColor,
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-        ],
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(

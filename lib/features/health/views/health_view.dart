@@ -59,16 +59,7 @@ class _HealthScreenState extends State<HealthScreen> {
                   Healthchip(
                     selectedTag: _viewModel.hubTag,
                     onTagSelected: (tag) {
-                      if (tag == "Doctor") {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const DoctorsScreen(),
-                          ),
-                        );
-                      } else {
-                        _viewModel.selectHubTag(tag);
-                      }
+                      _viewModel.selectHubTag(tag);
                     },
                   ),
                   const SizedBox(height: 16),
@@ -76,6 +67,8 @@ class _HealthScreenState extends State<HealthScreen> {
                     const SkincareView()
                   else if (_viewModel.hubTag == "Hair Care")
                     const HaircareView()
+                  else if (_viewModel.hubTag == "Doctor")
+                    const DoctorsView()
                   else ...[
                     PersonalizedplanHealthpage(
                       plans: _viewModel.workoutPlans,
