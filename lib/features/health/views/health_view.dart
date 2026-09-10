@@ -7,6 +7,9 @@ import 'package:shongi/features/health/views/widgets/header_tagchips_healthPage.
 import 'package:shongi/features/health/views/widgets/personalizedplan_healthpage.dart';
 import 'package:shongi/features/health/views/widgets/exerciseLibrary_healthPage.dart';
 
+import 'package:shongi/features/skincare/views/skincare_view.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 class HealthScreen extends StatefulWidget {
   final HealthViewModel? viewModel;
 
@@ -69,21 +72,66 @@ class _HealthScreenState extends State<HealthScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  PersonalizedplanHealthpage(
-                    plans: _viewModel.workoutPlans,
-                  ),
-                  const SizedBox(height: 20),
-                  ExerciseLibrary(
-                    exercises: _viewModel.allExercises,
-                    selectedCategory: _viewModel.selectedCategory,
-                    onCategorySelected: (cat) => _viewModel.selectCategory(cat),
-                  ),
+                  if (_viewModel.hubTag == "Skin Care")
+                    const SkincareView()
+                  else if (_viewModel.hubTag == "Hair Care")
+                    _buildHairCarePlaceholder()
+                  else ...[
+                    PersonalizedplanHealthpage(
+                      plans: _viewModel.workoutPlans,
+                    ),
+                    const SizedBox(height: 20),
+                    ExerciseLibrary(
+                      exercises: _viewModel.allExercises,
+                      selectedCategory: _viewModel.selectedCategory,
+                      onCategorySelected: (cat) => _viewModel.selectCategory(cat),
+                    ),
+                  ],
                   const SizedBox(height: 100),
                 ],
               ),
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildHairCarePlaceholder() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cardBorderColor),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.content_cut_rounded,
+            size: 48,
+            color: accentColor,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Hair Care Routines',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tailored hair wash, oiling, and scalp health routines coming soon!',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }

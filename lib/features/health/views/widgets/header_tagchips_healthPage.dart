@@ -73,13 +73,13 @@ class Healthchip extends StatelessWidget {
             ),
             HealthTagchip(
               text: "Skin Care",
-              icon: Icons.face_retouching_natural_rounded,
+              icon: Icons.auto_awesome,
               isSelected: selectedTag == "Skin Care",
               ontap: () => onTagSelected?.call("Skin Care"),
             ),
             HealthTagchip(
               text: "Hair Care",
-              icon: Icons.dry_cleaning_rounded,
+              icon: Icons.content_cut_rounded,
               isSelected: selectedTag == "Hair Care",
               ontap: () => onTagSelected?.call("Hair Care"),
             ),
