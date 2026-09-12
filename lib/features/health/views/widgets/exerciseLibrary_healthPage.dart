@@ -191,9 +191,10 @@ class _ExerciseLibraryState extends State<ExerciseLibrary> {
               Text(
                 "Exercise Library",
                 style: GoogleFonts.poppins(
-                  fontSize: 18,
+                  fontSize: 18.5,
                   fontWeight: FontWeight.w700,
                   color: textColor,
+                  letterSpacing: -0.4,
                 ),
               ),
               Text(

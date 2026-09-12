@@ -5,11 +5,13 @@ import 'package:shongi/core/theme/app_colors.dart';
 class GoalsCard extends StatelessWidget {
   final List<String> goals;
   final VoidCallback? onEdit;
+  final ValueChanged<String>? onRemoveGoal;
 
   const GoalsCard({
     super.key,
     required this.goals,
     this.onEdit,
+    this.onRemoveGoal,
   });
 
   @override
@@ -63,18 +65,18 @@ class GoalsCard extends StatelessWidget {
                     () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Edit Goals coming soon!'),
+                          content: Text('Add a goal'),
                           backgroundColor: accentColor,
                         ),
                       );
                     },
                 icon: const Icon(
-                  Icons.edit_outlined,
-                  size: 15,
+                  Icons.add_circle_outline_rounded,
+                  size: 16,
                   color: accentColor,
                 ),
                 label: Text(
-                  "Edit",
+                  "Add",
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -89,29 +91,57 @@ class GoalsCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: goals.map((goal) {
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: chipBackground,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: cardBorderColor),
-                ),
-                child: Text(
-                  goal.trim(),
-                  style: GoogleFonts.poppins(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: accentColor,
+              final trimmed = goal.trim();
+              return GestureDetector(
+                onLongPress: onRemoveGoal != null ? () => onRemoveGoal!(trimmed) : null,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: chipBackground,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: cardBorderColor),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        trimmed,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: accentColor,
+                        ),
+                      ),
+                      if (onRemoveGoal != null) ...[
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.close_rounded,
+                          size: 14,
+                          color: accentColor.withValues(alpha: 0.5),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               );
             }).toList(),
           ),
+          if (goals.isNotEmpty && onRemoveGoal != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              "Long-press a goal to remove it",
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                color: textSecondary,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
-}
+}

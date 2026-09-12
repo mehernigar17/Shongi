@@ -6,12 +6,18 @@ class ProfileStats extends StatelessWidget {
   final String streak;
   final String logs;
   final String level;
+  final VoidCallback? onStreakTap;
+  final VoidCallback? onLogsTap;
+  final VoidCallback? onLevelTap;
 
   const ProfileStats({
     super.key,
     this.streak = "14d",
     this.logs = "86",
     this.level = "Silver",
+    this.onStreakTap,
+    this.onLogsTap,
+    this.onLevelTap,
   });
 
   @override
@@ -27,6 +33,7 @@ class ProfileStats extends StatelessWidget {
             valueColor: pinkAccent,
             cardColor: pinkBackground,
             borderColor: const Color(0xFFFFD4DF),
+            onTap: onStreakTap,
           ),
         ),
         const SizedBox(width: 10),
@@ -39,6 +46,7 @@ class ProfileStats extends StatelessWidget {
             valueColor: accentColor,
             cardColor: chipBackground,
             borderColor: cardBorderColor,
+            onTap: onLogsTap,
           ),
         ),
         const SizedBox(width: 10),
@@ -51,6 +59,7 @@ class ProfileStats extends StatelessWidget {
             valueColor: const Color(0xFF9E6B00),
             cardColor: amberBackground,
             borderColor: const Color(0xFFFFECC0),
+            onTap: onLevelTap,
           ),
         ),
       ],
@@ -65,49 +74,58 @@ class ProfileStats extends StatelessWidget {
     required Color valueColor,
     required Color cardColor,
     required Color borderColor,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      height: 105,
-      decoration: BoxDecoration(
-        color: cardColor,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: iconColor.withValues(alpha: 0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+        onTap: onTap,
+        child: Ink(
+          height: 105,
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: borderColor),
+            boxShadow: [
+              BoxShadow(
+                color: iconColor.withValues(alpha: 0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: iconColor,
-            size: 22,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: iconColor,
+                size: 22,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                value,
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: valueColor,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                  color: textSecondary,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: valueColor,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w500,
-              color: textSecondary,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
-}
+}

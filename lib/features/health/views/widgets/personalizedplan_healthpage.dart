@@ -66,12 +66,12 @@ class PersonalizedplanHealthpage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  "PERSONALIZED PLAN",
+                  "YOUR PERSONALIZED PLAN",
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 1.0,
+                    letterSpacing: 0.8,
                   ),
                 ),
               ),
@@ -82,14 +82,15 @@ class PersonalizedplanHealthpage extends StatelessWidget {
             "Maintain your healthy physique with balanced routines",
             style: GoogleFonts.poppins(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 17,
               fontWeight: FontWeight.w700,
               height: 1.3,
+              letterSpacing: -0.2,
             ),
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 190,
+            height: 215,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
@@ -113,7 +114,7 @@ class PlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 175,
+      width: 190,
       padding: const EdgeInsets.all(14),
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
@@ -142,14 +143,28 @@ class PlanCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             plan.title,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.poppins(
               color: Colors.white,
               fontWeight: FontWeight.w700,
-              fontSize: 13,
+              fontSize: 14,
+              height: 1.25,
             ),
           ),
+          if (plan.subtitle.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              plan.subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                color: Colors.white.withValues(alpha: 0.75),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           Expanded(
             child: ListView.builder(
@@ -158,7 +173,7 @@ class PlanCard extends StatelessWidget {
               itemCount: plan.items.length,
               itemBuilder: (context, index) {
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 5),
+                  padding: const EdgeInsets.only(bottom: 6),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -169,12 +184,13 @@ class PlanCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           plan.items[index],
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
                             color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: 11,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w400,
+                            height: 1.3,
                           ),
                         ),
                       ),
@@ -189,4 +205,3 @@ class PlanCard extends StatelessWidget {
     );
   }
 }
-

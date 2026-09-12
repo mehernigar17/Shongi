@@ -47,8 +47,9 @@ class ExerciseCard extends StatelessWidget {
                       exercise.title,
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w700,
-                        fontSize: 17,
+                        fontSize: 19,
                         color: textColor,
+                        letterSpacing: -0.3,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -121,34 +122,26 @@ class ExerciseCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             height: 44,
-            child: ElevatedButton(
+            child: TextButton.icon(
               onPressed: onTap,
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
+              icon: const Icon(
+                Icons.info_outline_rounded,
+                size: 16,
+                color: accentColor,
+              ),
+              label: Text(
+                "Know more",
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: accentColor,
+                ),
+              ),
+              style: TextButton.styleFrom(
                 backgroundColor: chipBackground,
-                foregroundColor: accentColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Know more",
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: accentColor,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  const Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 16,
-                    color: accentColor,
-                  ),
-                ],
               ),
             ),
           ),
