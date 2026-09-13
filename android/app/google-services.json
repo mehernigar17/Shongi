@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "394327746329",
+    "project_id": "shongi-8ed7e",
+    "storage_bucket": "shongi-8ed7e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:394327746329:android:c9fe95d2ad500e6b8a0788",
+        "android_client_info": {
+          "package_name": "com.example.shongi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA07sGK1qpl1ClFrRKB4Y8zTNeR8_ViNR0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

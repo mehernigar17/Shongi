@@ -1,30 +1,74 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shongi/app/app.dart';
-import 'package:shongi/app/app_dependencies.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shongi/features/auth/views/auth_view.dart';
+import 'package:shongi/features/profile/views/profile_view.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(ShongiApp(dependencies: AppDependencies()));
+  setUp(() => GoogleFonts.config.allowRuntimeFetching = false);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  Widget app() => MaterialApp(
+    initialRoute: '/login',
+    routes: {
+      '/login': (_) => const AuthScreen(),
+      '/register': (_) => const AuthScreen(register: true),
+      '/home': (_) => const ProfileScreen(),
+      '/onboarding': (_) =>
+          const Scaffold(body: Text('Onboarding destination')),
+    },
+  );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('Login validates input and logout clears navigation history', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app());
+    await tester.tap(find.text('Log in'));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter a valid email address'), findsOneWidget);
+    expect(find.text('Enter a password'), findsOneWidget);
+    await tester.enterText(
+      find.byType(TextFormField).at(0),
+      'demo@example.com',
+    );
+    await tester.enterText(find.byType(TextFormField).at(1), 'demo');
+    await tester.ensureVisible(find.text('Log in'));
+    await tester.tap(find.text('Log in'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileScreen), findsOneWidget);
+    await tester.ensureVisible(find.text('Sign Out'));
+    await tester.tap(find.text('Sign Out'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Sign Out'));
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome back'), findsOneWidget);
+    expect(
+      Navigator.of(tester.element(find.byType(AuthScreen))).canPop(),
+      isFalse,
+    );
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('Register checks confirmation and opens onboarding', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app());
+    await tester.ensureVisible(find.text('New to Shongi? Register'));
+    await tester.tap(find.text('New to Shongi? Register'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(0), 'Demo User');
+    await tester.enterText(
+      find.byType(TextFormField).at(1),
+      'demo@example.com',
+    );
+    await tester.enterText(find.byType(TextFormField).at(2), 'demo');
+    await tester.enterText(find.byType(TextFormField).at(3), 'different');
+    await tester.ensureVisible(find.text('Create account'));
+    await tester.tap(find.text('Create account'));
+    await tester.pumpAndSettle();
+    expect(find.text('Passwords do not match'), findsOneWidget);
+    await tester.enterText(find.byType(TextFormField).at(3), 'demo');
+    await tester.ensureVisible(find.text('Create account'));
+    await tester.tap(find.text('Create account'));
+    await tester.pumpAndSettle();
+    expect(find.text('Onboarding destination'), findsOneWidget);
   });
 }

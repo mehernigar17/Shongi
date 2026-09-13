@@ -403,7 +403,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              _showSnackBar('Signed out successfully');
+              Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
             },
             child: Text(
               'Sign Out',
@@ -491,7 +491,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SignOutButton(
                       onTap: _showSignOutDialog,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
