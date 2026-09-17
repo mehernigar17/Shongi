@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/core/theme/app_colors.dart';
-import 'package:shongi/features/onboarding/data/in_memory_profile_repository.dart';
+import 'package:shongi/features/auth/services/auth_service.dart';
+import 'package:shongi/features/onboarding/data/firestore_profile_repository.dart';
 import 'package:shongi/features/profile/viewmodels/profile_view_model.dart';
 import 'package:shongi/features/profile/views/widgets/profile_head.dart';
 import 'package:shongi/features/profile/views/widgets/profile_stats.dart';
@@ -30,7 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (widget.viewModel != null) {
       _vm = widget.viewModel!;
     } else {
-      _vm = ProfileViewModel(InMemoryProfileRepository());
+      _vm = ProfileViewModel(FirestoreProfileRepository());
       _ownsViewModel = true;
     }
   }
@@ -403,7 +404,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
+              // Firebase sign-out — AuthWrapper auto-returns to login screen
+              AuthService().logout();
             },
             child: Text(
               'Sign Out',

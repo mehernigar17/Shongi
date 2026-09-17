@@ -1,7 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../services/auth_service.dart';
 
-/// UI-only demo: credentials are validated for shape, never sent or stored.
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key, this.register = false});
   final bool register;
@@ -12,25 +13,160 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _password = TextEditingController();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _authService = AuthService();
+
+  /// Login/register mode. Toggled with setState — NEVER with Navigator,
+  /// because this screen lives inside AuthWrapper (the home route) and
+  /// replacing that route destroys the auth listener that routes the app
+  /// to onboarding/dashboard after sign-in.
+  late bool _registerMode = widget.register;
+
   bool _hidePassword = true;
   bool _hideConfirmation = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _password.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
+  // ─────────────────────── FIREBASE LOGIN ───────────────────────
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) {
+      _showError('Please fix the highlighted fields.');
+      return;
+    }
     FocusScope.of(context).unfocus();
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      widget.register ? '/onboarding' : '/home',
-      (_) => false,
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      // No manual navigation — AuthWrapper listens to Firebase
+      // authStateChanges and routes to MainScreen automatically.
+    } on FirebaseAuthException catch (e) {
+      _showError(_friendlyError(e));
+    } catch (_) {
+      _showError('Something went wrong. Please try again.');
+    } finally {
+      // Always reset the button state, even on unexpected errors.
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // ─────────────────────── FIREBASE REGISTER ───────────────────────
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) {
+      _showError('Please fix the highlighted fields.');
+      return;
+    }
+    FocusScope.of(context).unfocus();
+
+    setState(() => _isLoading = true);
+
+    try {
+      final credential = await _authService.register(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      // Display name is cosmetic — a failure here must NEVER make the user
+      // think signup failed (the account already exists at this point).
+      try {
+        await credential.user?.updateDisplayName(
+          _nameController.text.trim(),
+        );
+      } catch (_) {
+        // Ignore: the account was created successfully.
+      }
+
+      // Create the Firestore user doc so the onboarding flag is tracked.
+      // If this fails, onboarding will simply show again next login.
+      try {
+        await _authService.createUserDoc(credential.user);
+      } catch (_) {
+        // Ignore: auth succeeded; Firestore will be retried on onboarding.
+      }
+
+      if (mounted) {
+        _showSuccess('Account created! Complete your profile to continue.');
+      }
+    } on FirebaseAuthException catch (e) {
+      _showError(_friendlyError(e));
+    } catch (_) {
+      _showError('Something went wrong. Please try again.');
+    } finally {
+      // Always reset the button state, even on unexpected errors.
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // ─────────────────────── FRIENDLY ERROR MESSAGES ───────────────────────
+  String _friendlyError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+      case 'invalid-credential':
+        return 'No account found with this email.';
+      case 'wrong-password':
+        return 'Incorrect password.';
+      case 'email-already-in-use':
+        return 'This email is already registered. Try logging in.';
+      case 'weak-password':
+        return 'Password is too weak. Use at least 6 characters.';
+      case 'invalid-email':
+        return 'Invalid email address.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'network-request-failed':
+      case 'network_error':
+        return 'No internet connection. Check your network.';
+      default:
+        return 'Something went wrong. Please try again.';
+    }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    final isDuplicate = message.contains('already registered');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        action: isDuplicate
+            ? SnackBarAction(
+                label: 'Log in',
+                textColor: Colors.white,
+                onPressed: () => setState(() => _registerMode = false),
+              )
+            : null,
+      ),
     );
   }
 
+  void _showSuccess(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  // ─────────────────────── UI HELPERS ───────────────────────
   InputDecoration _decoration(String label, IconData icon) => InputDecoration(
     labelText: label,
     prefixIcon: Icon(icon, color: accentColor),
@@ -47,15 +183,17 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget _passwordField({bool confirmation = false}) {
     final hidden = confirmation ? _hideConfirmation : _hidePassword;
     return TextFormField(
-      controller: confirmation ? null : _password,
+      controller: confirmation ? null : _passwordController,
       obscureText: hidden,
       autocorrect: false,
       enableSuggestions: false,
-      textInputAction: widget.register && !confirmation
+      textInputAction: _registerMode && !confirmation
           ? TextInputAction.next
           : TextInputAction.done,
       onFieldSubmitted: (_) {
-        if (!widget.register || confirmation) _submit();
+        if (!_registerMode || confirmation) {
+          _registerMode ? _register() : _login();
+        }
       },
       decoration:
           _decoration(
@@ -80,7 +218,10 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
       validator: (value) {
         if (value == null || value.isEmpty) return 'Enter a password';
-        if (confirmation && value != _password.text) {
+        if (value.length < 6) {
+          return 'Password must be at least 6 characters';
+        }
+        if (confirmation && value != _passwordController.text) {
           return 'Passwords do not match';
         }
         return null;
@@ -90,7 +231,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final register = widget.register;
+    final register = _registerMode;
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -101,6 +242,7 @@ class _AuthScreenState extends State<AuthScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // ─── Logo ───
                   Center(
                     child: Container(
                       padding: const EdgeInsets.all(20),
@@ -130,6 +272,8 @@ class _AuthScreenState extends State<AuthScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
+
+                  // ─── Form Card ───
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -139,6 +283,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     child: Form(
                       key: _formKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -158,8 +303,11 @@ class _AuthScreenState extends State<AuthScreen> {
                             style: TextStyle(color: textSecondary, height: 1.6),
                           ),
                           const SizedBox(height: 24),
+
+                          // ─── Full name (register only) ───
                           if (register) ...[
                             TextFormField(
+                              controller: _nameController,
                               textCapitalization: TextCapitalization.words,
                               textInputAction: TextInputAction.next,
                               decoration: _decoration(
@@ -173,7 +321,10 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                             const SizedBox(height: 16),
                           ],
+
+                          // ─── Email ───
                           TextFormField(
+                            controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
                             autocorrect: false,
@@ -189,28 +340,46 @@ class _AuthScreenState extends State<AuthScreen> {
                                 : 'Enter a valid email address',
                           ),
                           const SizedBox(height: 16),
+
+                          // ─── Password ───
                           _passwordField(),
+
+                          // ─── Confirm password (register only) ───
                           if (register) ...[
                             const SizedBox(height: 16),
                             _passwordField(confirmation: true),
                           ],
                           const SizedBox(height: 24),
+
+                          // ─── Submit button ───
                           FilledButton(
-                            onPressed: _submit,
+                            onPressed: _isLoading
+                                ? null
+                                : (register ? _register : _login),
                             style: FilledButton.styleFrom(
                               minimumSize: const Size.fromHeight(54),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            child: Text(register ? 'Create account' : 'Log in'),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(register ? 'Create account' : 'Log in'),
                           ),
                           const SizedBox(height: 16),
+
+                          // ─── Toggle login / register ───
                           TextButton(
-                            onPressed: () =>
-                                Navigator.of(context).pushReplacementNamed(
-                                  register ? '/login' : '/register',
-                                ),
+                            onPressed: _isLoading
+                                ? null
+                                : () => setState(() => _registerMode = !_registerMode),
                             child: Text(
                               register
                                   ? 'Already have an account? Log in'
@@ -220,15 +389,6 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Demo preview · Use any email and password.\nNo account is created or saved.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: textSecondary,
-                      height: 1.6,
                     ),
                   ),
                 ],

@@ -1,7 +1,7 @@
-import '../features/onboarding/data/in_memory_profile_repository.dart';
+import '../features/onboarding/data/firestore_profile_repository.dart';
 import '../features/onboarding/repositories/profile_repository.dart';
 
 class AppDependencies {
-  AppDependencies() : profileRepository = InMemoryProfileRepository();
+  AppDependencies() : profileRepository = FirestoreProfileRepository();
   final ProfileRepository profileRepository;
 }

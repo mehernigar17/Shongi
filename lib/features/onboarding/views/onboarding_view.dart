@@ -4,10 +4,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/features/onboarding/models/user_profile.dart';
 import 'package:shongi/app/app_shell_view.dart';
 import 'package:shongi/app/app_dependencies.dart';
+import 'package:shongi/features/auth/services/auth_service.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key, required this.dependencies});
+  const OnboardingScreen({
+    super.key,
+    required this.dependencies,
+    this.onDone,
+  });
   final AppDependencies dependencies;
+  final VoidCallback? onDone;
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -17,6 +23,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
 
   int currentPage = 0;
+  bool _isSaving = false;
 
   final UserOnboardingData userData = UserOnboardingData();
 
@@ -60,6 +67,68 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
       );
+    }
+  }
+
+  // ─────────────────────── SAVE TO FIRESTORE ───────────────────────
+  UserProfile _collectProfile() {
+    return UserProfile(
+      name: nameController.text.trim(),
+      age: int.tryParse(ageController.text) ?? 18,
+      weightKg: double.tryParse(weightController.text) ?? 60,
+      heightCm: double.tryParse(heightController.text) ?? 165,
+      skinType: userData.skinType,
+      cycleType: userData.cycleType,
+      selfCareDay: userData.selfCareDay,
+      medications: medicationController.text.trim(),
+      lastPeriodStart: userData.lastPeriodStart,
+      lastPeriodEnd: userData.lastPeriodEnd,
+    );
+  }
+
+  Future<void> _finishOnboarding() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+
+    String? warning;
+    try {
+      // Persist the full profile + onboardingCompleted flag in Firestore.
+      await widget.dependencies.profileRepository.save(_collectProfile());
+    } catch (e) {
+      // Never trap the user here: proceed to the dashboard, but warn them
+      // so they know the profile wasn't saved (e.g. Firestore rules).
+      warning = 'Could not save your profile: $e';
+    }
+
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+
+    if (warning != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(warning),
+          backgroundColor: Colors.orange.shade800,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
+    if (widget.onDone != null) {
+      widget.onDone!();
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainScreen()),
+      );
+    }
+  }
+
+  /// Signs the current user out so the app returns to the login page.
+  Future<void> _signOut() async {
+    try {
+      await AuthService().logout();
+    } catch (_) {
+      // AuthWrapper listens to authStateChanges and shows the login page.
     }
   }
 
@@ -455,11 +524,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget resultPage() {
-    userData.name = nameController.text;
-    userData.age = int.tryParse(ageController.text) ?? 18;
-    userData.weight = double.tryParse(weightController.text) ?? 60;
-    userData.height = double.tryParse(heightController.text) ?? 165;
-    userData.medications = medicationController.text;
+    final weight = double.tryParse(weightController.text) ?? 60;
+    final height = double.tryParse(heightController.text) ?? 165;
+    final bmi = weight / ((height / 100) * (height / 100));
+    final bmiCategory = bmi < 18.5
+        ? "Underweight"
+        : bmi < 25
+        ? "Healthy"
+        : bmi < 30
+        ? "Overweight"
+        : "Obese";
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -509,8 +583,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
           buildResultCard(
             title: "BMI",
-            value:
-                "${userData.bmi.toStringAsFixed(1)} (${userData.bmiCategory})",
+            value: "${bmi.toStringAsFixed(1)} ($bmiCategory)",
           ),
 
           buildResultCard(title: "Skin Type", value: userData.skinType),
@@ -599,16 +672,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
           Expanded(
             child: ElevatedButton(
-              onPressed: () {
-                if (currentPage == 2) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MainScreen()),
-                  );
-                  return;
-                }
-                nextPage();
-              },
+              onPressed: _isSaving
+                  ? null
+                  : () {
+                      if (currentPage == 2) {
+                        _finishOnboarding();
+                        return;
+                      }
+                      nextPage();
+                    },
 
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6B4BA3),
@@ -617,13 +689,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   borderRadius: BorderRadius.circular(18),
                 ),
               ),
-              child: Text(
-                currentPage == 2 ? "Done" : "Continue",
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      currentPage == 2 ? "Done" : "Continue",
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -661,24 +742,42 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: const Color(0xFFF8F4FC),
 
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            pageIndicator(),
+            Column(
+              children: [
+                pageIndicator(),
 
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (index) {
-                  setState(() {
-                    currentPage = index;
-                  });
-                },
-                children: [pageOne(), pageTwo(), resultPage()],
-              ),
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    onPageChanged: (index) {
+                      setState(() {
+                        currentPage = index;
+                      });
+                    },
+                    children: [pageOne(), pageTwo(), resultPage()],
+                  ),
+                ),
+
+                bottomButtons(),
+              ],
             ),
 
-            bottomButtons(),
+            // Escape hatch: lets the user return to the login page at any time.
+            Positioned(
+              top: 12,
+              right: 12,
+              child: IconButton(
+                tooltip: 'Sign out',
+                onPressed: _signOut,
+                icon: const Icon(
+                  Icons.logout_rounded,
+                  color: Color(0xFF6B4BA3),
+                ),
+              ),
+            ),
           ],
         ),
       ),
