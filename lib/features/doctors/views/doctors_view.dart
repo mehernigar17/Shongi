@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shongi/app/app_dependencies.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 import 'package:shongi/features/doctors/data/mock_doctor_repository.dart';
+import 'package:shongi/features/doctors/models/report_data.dart';
 import 'package:shongi/features/doctors/viewmodels/doctors_view_model.dart';
 import 'package:shongi/features/doctors/views/widgets/Recommended_Doctor.dart';
 import 'package:shongi/features/doctors/views/widgets/doctor_header.dart';
@@ -9,10 +11,16 @@ import 'package:shongi/features/doctors/views/widgets/report_preview.dart';
 
 /// Embedded doctor content used inside the Health Hub, mirroring
 /// SkincareView / HaircareView so the Doctor chip behaves like the others.
+///
+/// The report preview is computed from the signed-in user's real
+/// Firestore records (profile + logs + periods); the specialist list is
+/// curated static content, but booking writes to the user's own
+/// `users/{uid}/appointments` collection.
 class DoctorsView extends StatefulWidget {
   final DoctorsViewModel? viewModel;
+  final AppDependencies? dependencies;
 
-  const DoctorsView({super.key, this.viewModel});
+  const DoctorsView({super.key, this.viewModel, this.dependencies});
 
   @override
   State<DoctorsView> createState() => _DoctorsViewState();
@@ -21,6 +29,9 @@ class DoctorsView extends StatefulWidget {
 class _DoctorsViewState extends State<DoctorsView> {
   late final DoctorsViewModel _viewModel;
   bool _ownsViewModel = false;
+
+  ReportData _report = ReportData.empty();
+  bool _reportLoading = true;
 
   @override
   void initState() {
@@ -31,6 +42,7 @@ class _DoctorsViewState extends State<DoctorsView> {
       _viewModel = DoctorsViewModel(MockDoctorRepository());
       _ownsViewModel = true;
     }
+    _loadReport();
   }
 
   @override
@@ -39,6 +51,34 @@ class _DoctorsViewState extends State<DoctorsView> {
       _viewModel.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _loadReport() async {
+    final deps = widget.dependencies;
+    if (deps == null) {
+      setState(() => _reportLoading = false);
+      return;
+    }
+    try {
+      final profile = await deps.profileRepository.load();
+      final logs = await deps.logRepository.loadLogs();
+      final periods = await deps.periodRepository.loadPeriods();
+      if (!mounted) return;
+      setState(() {
+        _report = ReportData.compute(
+          profile: profile,
+          logs: logs,
+          periods: periods,
+        );
+        _reportLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _report = ReportData.empty();
+        _reportLoading = false;
+      });
+    }
   }
 
   @override
@@ -51,7 +91,15 @@ class _DoctorsViewState extends State<DoctorsView> {
           children: [
             const DoctorPdfFile(),
             const SizedBox(height: 20),
-            const ReportPreview(),
+            if (_reportLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: CircularProgressIndicator(color: accentColor),
+                ),
+              )
+            else
+              ReportPreview(data: _report),
             const SizedBox(height: 24),
             if (_viewModel.isLoading)
               const Center(
@@ -61,7 +109,10 @@ class _DoctorsViewState extends State<DoctorsView> {
                 ),
               )
             else
-              RecommendedDoctor(doctor: _viewModel.doctors),
+              RecommendedDoctor(
+                doctor: _viewModel.doctors,
+                appointmentRepository: widget.dependencies?.appointmentRepository,
+              ),
           ],
         );
       },
@@ -72,8 +123,9 @@ class _DoctorsViewState extends State<DoctorsView> {
 /// Standalone doctor page (pushed as its own screen with a header).
 class DoctorsScreen extends StatefulWidget {
   final DoctorsViewModel? viewModel;
+  final AppDependencies? dependencies;
 
-  const DoctorsScreen({super.key, this.viewModel});
+  const DoctorsScreen({super.key, this.viewModel, this.dependencies});
 
   @override
   State<DoctorsScreen> createState() => _DoctorsScreenState();
@@ -115,7 +167,10 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
               const SizedBox(height: 15),
               const DoctorHeader(),
               const SizedBox(height: 20),
-              DoctorsView(viewModel: _viewModel),
+              DoctorsView(
+                viewModel: _viewModel,
+                dependencies: widget.dependencies,
+              ),
               const SizedBox(height: 100),
             ],
           ),

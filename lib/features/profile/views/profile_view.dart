@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shongi/app/app_dependencies.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 import 'package:shongi/features/auth/services/auth_service.dart';
 import 'package:shongi/features/onboarding/data/firestore_profile_repository.dart';
+import 'package:shongi/features/profile/data/firestore_user_settings_repository.dart';
 import 'package:shongi/features/profile/viewmodels/profile_view_model.dart';
 import 'package:shongi/features/profile/views/widgets/profile_head.dart';
 import 'package:shongi/features/profile/views/widgets/profile_stats.dart';
@@ -14,8 +16,9 @@ import 'package:shongi/features/profile/views/widgets/profile_logout.dart';
 
 class ProfileScreen extends StatefulWidget {
   final ProfileViewModel? viewModel;
+  final AppDependencies? dependencies;
 
-  const ProfileScreen({super.key, this.viewModel});
+  const ProfileScreen({super.key, this.viewModel, this.dependencies});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -30,8 +33,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     if (widget.viewModel != null) {
       _vm = widget.viewModel!;
+    } else if (widget.dependencies != null) {
+      _vm = ProfileViewModel(
+        widget.dependencies!.profileRepository,
+        widget.dependencies!.userSettingsRepository,
+      );
+      _ownsViewModel = true;
     } else {
-      _vm = ProfileViewModel(FirestoreProfileRepository());
+      _vm = ProfileViewModel(
+        FirestoreProfileRepository(),
+        FirestoreUserSettingsRepository(),
+      );
       _ownsViewModel = true;
     }
   }
@@ -42,12 +54,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  void _showSnackBar(String message) {
+  void _showSnackBar(String message, {bool error = false}) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: accentColor,
+        backgroundColor: error ? Colors.red.shade700 : accentColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         duration: const Duration(seconds: 2),
@@ -130,10 +142,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
-                onPressed: () {
-                  _vm.updateName(controller.text);
+                onPressed: () async {
+                  final ok = await _vm.updateName(controller.text);
+                  if (!mounted) return;
                   Navigator.pop(context);
-                  _showSnackBar('Name updated!');
+                  _showSnackBar(ok ? 'Name updated!' : 'Could not save name', error: !ok);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: accentColor,
@@ -216,15 +229,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: () {
-                    _vm.updateCycleDetails(
+                  onPressed: () async {
+                    final ok = await _vm.updateCycleDetails(
                       avgCycleLength: avgCtrl.text,
                       lastPeriod: periodCtrl.text,
                       cycleType: typeCtrl.text,
                       pcosDiagnosis: pcosCtrl.text,
                     );
+                    if (!mounted) return;
                     Navigator.pop(context);
-                    _showSnackBar('Cycle details updated!');
+                    _showSnackBar(
+                      ok ? 'Cycle details updated!' : 'Could not save changes',
+                      error: !ok,
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accentColor,
@@ -347,12 +364,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           TextButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                _vm.addGoal(controller.text);
-                Navigator.pop(ctx);
-                _showSnackBar('Goal added!');
-              }
+            onPressed: () async {
+              final ok = await _vm.addGoal(controller.text);
+              if (!ctx.mounted) return;
+              Navigator.pop(ctx);
+              _showSnackBar(ok ? 'Goal added!' : 'Could not save goal', error: !ok);
             },
             child: Text(
               'Add',
@@ -460,9 +476,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     GoalsCard(
                       goals: _vm.goals,
                       onEdit: _showAddGoalDialog,
-                      onRemoveGoal: (goal) {
-                        _vm.removeGoal(goal);
-                        _showSnackBar('Removed "$goal"');
+                      onRemoveGoal: (goal) async {
+                        final ok = await _vm.removeGoal(goal);
+                        _showSnackBar(
+                          ok ? 'Removed "$goal"' : 'Could not remove goal',
+                          error: !ok,
+                        );
                       },
                     ),
                     const SizedBox(height: 16),
@@ -470,17 +489,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       dailyReminders: _vm.dailyReminders,
                       notificationsEnabled: _vm.notificationsEnabled,
                       privacyEnabled: _vm.privacyEnabled,
-                      onDailyRemindersChanged: (v) {
-                        _vm.setDailyReminders(v);
-                        _showSnackBar(v ? 'Daily reminders enabled' : 'Daily reminders disabled');
+                      onDailyRemindersChanged: (v) async {
+                        final ok = await _vm.setDailyReminders(v);
+                        _showSnackBar(
+                          ok
+                              ? (v ? 'Daily reminders enabled' : 'Daily reminders disabled')
+                              : 'Could not save preference',
+                          error: !ok,
+                        );
                       },
-                      onNotificationsChanged: (v) {
-                        _vm.setNotifications(v);
-                        _showSnackBar(v ? 'Notifications enabled' : 'Notifications disabled');
+                      onNotificationsChanged: (v) async {
+                        final ok = await _vm.setNotifications(v);
+                        _showSnackBar(
+                          ok
+                              ? (v ? 'Notifications enabled' : 'Notifications disabled')
+                              : 'Could not save preference',
+                          error: !ok,
+                        );
                       },
-                      onPrivacyChanged: (v) {
-                        _vm.setPrivacy(v);
-                        _showSnackBar(v ? 'Privacy mode enabled' : 'Privacy mode disabled');
+                      onPrivacyChanged: (v) async {
+                        final ok = await _vm.setPrivacy(v);
+                        _showSnackBar(
+                          ok
+                              ? (v ? 'Privacy mode enabled' : 'Privacy mode disabled')
+                              : 'Could not save preference',
+                          error: !ok,
+                        );
                       },
                     ),
                     const SizedBox(height: 16),

@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 import 'package:shongi/features/doctors/models/doctor.dart';
+import 'package:shongi/features/doctors/repositories/appointment_repository.dart';
 import 'package:shongi/features/doctors/views/widgets/view_profile.dart';
 
 class RecommendedDoctor extends StatelessWidget {
   final List<Doctor> doctor;
+  final AppointmentRepository? appointmentRepository;
 
-  const RecommendedDoctor({super.key, required this.doctor});
+  const RecommendedDoctor({
+    super.key,
+    required this.doctor,
+    this.appointmentRepository,
+  });
 
   void _openProfile(BuildContext context, Doctor doc) {
     showModalBottomSheet(
@@ -29,6 +35,7 @@ class RecommendedDoctor extends StatelessWidget {
               child: ViewProfile(
                 doctor: doc,
                 scrollController: scrollController,
+                appointmentRepository: appointmentRepository,
               ),
             );
           },

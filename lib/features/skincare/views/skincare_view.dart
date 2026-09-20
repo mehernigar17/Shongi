@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shongi/app/app_dependencies.dart';
 import 'package:shongi/core/theme/app_colors.dart';
-import '../data/mock_skincare_repository.dart';
+import '../data/firestore_skincare_repository.dart';
 import '../viewmodels/skincare_view_model.dart';
 import 'widgets/skincare_reminder_dialog.dart';
 import 'widgets/skincare_routine_card.dart';
 
 class SkincareView extends StatefulWidget {
   final SkincareViewModel? viewModel;
+  final AppDependencies? dependencies;
 
-  const SkincareView({super.key, this.viewModel});
+  const SkincareView({super.key, this.viewModel, this.dependencies});
 
   @override
   State<SkincareView> createState() => _SkincareViewState();
@@ -24,8 +26,11 @@ class _SkincareViewState extends State<SkincareView> {
     super.initState();
     if (widget.viewModel != null) {
       _viewModel = widget.viewModel!;
+    } else if (widget.dependencies != null) {
+      _viewModel = SkincareViewModel(widget.dependencies!.skincareRepository);
+      _ownsViewModel = true;
     } else {
-      _viewModel = SkincareViewModel(MockSkincareRepository());
+      _viewModel = SkincareViewModel(FirestoreSkincareRepository());
       _ownsViewModel = true;
     }
   }

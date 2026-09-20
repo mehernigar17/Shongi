@@ -122,7 +122,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
           }
 
           // Already completed onboarding → straight to dashboard
-          return const MainScreen();
+          return MainScreen(dependencies: widget.dependencies);
         }
 
         // Not logged in → AuthScreen

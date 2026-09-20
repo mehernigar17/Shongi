@@ -4,22 +4,33 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 
 class HomeCycleStatusCard extends StatelessWidget {
-  const HomeCycleStatusCard({super.key});
+  final int cycleDay;
+  final int avgCycleLength;
+  final int daysUntilNextPeriod;
+  final String statusLabel;
+
+  const HomeCycleStatusCard({
+    super.key,
+    this.cycleDay = 1,
+    this.avgCycleLength = 28,
+    this.daysUntilNextPeriod = 0,
+    this.statusLabel = 'No cycle data yet',
+  });
 
   @override
   Widget build(BuildContext context) {
+    final progress =
+        avgCycleLength <= 0 ? 0.0 : (cycleDay / avgCycleLength).clamp(0.0, 1.0);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: cardBackground,
-
         borderRadius: BorderRadius.circular(30),
-
         border: Border.all(
           color: const Color(0xFFE9DDF8),
         ),
-
         boxShadow: [
           BoxShadow(
             color: accentColor.withOpacity(0.06),
@@ -28,34 +39,28 @@ class HomeCycleStatusCard extends StatelessWidget {
           ),
         ],
       ),
-
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: accentColor,
                         shape: BoxShape.circle,
                       ),
-
                       child: const Icon(
                         Icons.water_drop_rounded,
                         color: Colors.white,
                         size: 14,
                       ),
                     ),
-
                     const SizedBox(width: 8),
                     const Text(
                       "Cycle Status",
@@ -67,9 +72,7 @@ class HomeCycleStatusCard extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 14),
-
                 Text(
                   "Your Cycle\nProgress",
                   style: GoogleFonts.poppins(
@@ -79,11 +82,9 @@ class HomeCycleStatusCard extends StatelessWidget {
                     height: 1.15,
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
                 Text(
-                  "Next period in ~7 days",
+                  statusLabel,
                   style: TextStyle(
                     color: textColor.withOpacity(0.58),
                     fontSize: 12.5,
@@ -93,16 +94,13 @@ class HomeCycleStatusCard extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(width: 10),
-
           SizedBox(
             width: 92,
             height: 92,
             child: Stack(
               alignment: Alignment.center,
               children: [
-
                 SizedBox(
                   width: 92,
                   height: 92,
@@ -112,18 +110,16 @@ class HomeCycleStatusCard extends StatelessWidget {
                     color: Colors.white.withOpacity(0.9),
                   ),
                 ),
-
-                const SizedBox(
+                SizedBox(
                   width: 92,
                   height: 92,
                   child: CircularProgressIndicator(
-                    value: 18 / 28,
+                    value: progress,
                     strokeWidth: 9,
                     strokeCap: StrokeCap.round,
                     color: accentColor,
                   ),
                 ),
-
                 Container(
                   width: 68,
                   height: 68,
@@ -131,13 +127,11 @@ class HomeCycleStatusCard extends StatelessWidget {
                     color: Colors.white.withOpacity(0.95),
                     shape: BoxShape.circle,
                   ),
-
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-
                       Text(
-                        "18",
+                        "$cycleDay",
                         style: GoogleFonts.poppins(
                           color: textColor,
                           fontSize: 22,
@@ -145,7 +139,6 @@ class HomeCycleStatusCard extends StatelessWidget {
                           height: 1,
                         ),
                       ),
-
                       Text(
                         "days",
                         style: TextStyle(

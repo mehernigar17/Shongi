@@ -1,93 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/core/theme/app_colors.dart';
-
-class TimeSlotModel {
-  final String id;
-  final String time;
-  final int bookedCount;
-  final int totalSlots;
-
-  const TimeSlotModel({
-    required this.id,
-    required this.time,
-    required this.bookedCount,
-    required this.totalSlots,
-  });
-
-  bool get isFull => bookedCount >= totalSlots;
-  int get remaining => totalSlots - bookedCount;
-
-  factory TimeSlotModel.fromJson(Map<String, dynamic> json) {
-    return TimeSlotModel(
-      id: json['id']?.toString() ?? '',
-      time: json['time'] as String,
-      bookedCount: json['booked_count'] as int,
-      totalSlots: json['total_slots'] as int,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'time': time,
-    'booked_count': bookedCount,
-    'total_slots': totalSlots,
-  };
-}
-
-class AppointmentDayModel {
-  final DateTime date;
-  final List<TimeSlotModel> slots;
-
-  const AppointmentDayModel({
-    required this.date,
-    required this.slots,
-  });
-}
-
-abstract class AppointmentRepository {
-  Future<List<TimeSlotModel>> fetchSlots(String doctorId, DateTime date);
-  Future<bool> bookSlot(String doctorId, DateTime date, String slotId);
-}
-
-class MockAppointmentRepository implements AppointmentRepository {
-  @override
-  Future<List<TimeSlotModel>> fetchSlots(String doctorId, DateTime date) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return _mockSlots;
-  }
-
-  @override
-  Future<bool> bookSlot(String doctorId, DateTime date, String slotId) async {
-    await Future.delayed(const Duration(milliseconds: 250));
-    return true;
-  }
-
-  static const List<TimeSlotModel> _mockSlots = [
-    TimeSlotModel(id: 's1', time: '9:00 AM', bookedCount: 3, totalSlots: 3),
-    TimeSlotModel(id: 's2', time: '9:30 AM', bookedCount: 2, totalSlots: 3),
-    TimeSlotModel(id: 's3', time: '10:00 AM', bookedCount: 1, totalSlots: 3),
-    TimeSlotModel(id: 's4', time: '10:30 AM', bookedCount: 0, totalSlots: 3),
-    TimeSlotModel(id: 's5', time: '11:00 AM', bookedCount: 3, totalSlots: 3),
-    TimeSlotModel(id: 's6', time: '11:30 AM', bookedCount: 1, totalSlots: 3),
-    TimeSlotModel(id: 's7', time: '2:00 PM', bookedCount: 0, totalSlots: 3),
-    TimeSlotModel(id: 's8', time: '2:30 PM', bookedCount: 2, totalSlots: 3),
-    TimeSlotModel(id: 's9', time: '3:00 PM', bookedCount: 0, totalSlots: 3),
-    TimeSlotModel(id: 's10', time: '3:30 PM', bookedCount: 1, totalSlots: 3),
-    TimeSlotModel(id: 's11', time: '4:00 PM', bookedCount: 0, totalSlots: 3),
-    TimeSlotModel(id: 's12', time: '4:30 PM', bookedCount: 2, totalSlots: 3),
-  ];
-}
+import 'package:shongi/features/doctors/data/firestore_appointment_repository.dart';
+import 'package:shongi/features/doctors/models/appointment_slot.dart';
+import 'package:shongi/features/doctors/repositories/appointment_repository.dart';
 
 class BookAppointment extends StatefulWidget {
+  final String doctorId;
   final String doctorName;
   final AppointmentRepository repository;
 
   BookAppointment({
     super.key,
+    required this.doctorId,
     required this.doctorName,
     AppointmentRepository? repository,
-  }) : repository = repository ?? MockAppointmentRepository();
+  }) : repository = repository ?? FirestoreAppointmentRepository();
 
   @override
   State<BookAppointment> createState() => BookAppointmentState();
@@ -95,10 +23,10 @@ class BookAppointment extends StatefulWidget {
 
 class BookAppointmentState extends State<BookAppointment> {
   late DateTime selectedDate;
-  TimeSlotModel? selectedSlot;
+  AppointmentSlot? selectedSlot;
   late List<DateTime> dateList;
 
-  List<TimeSlotModel> slots = [];
+  List<AppointmentSlot> slots = [];
   bool isLoadingSlots = false;
   bool isBooking = false;
 
@@ -120,12 +48,27 @@ class BookAppointmentState extends State<BookAppointment> {
 
   Future<void> loadSlots() async {
     setState(() => isLoadingSlots = true);
-    final result = await widget.repository.fetchSlots(widget.doctorName, selectedDate);
-    if (!mounted) return;
-    setState(() {
-      slots = result;
-      isLoadingSlots = false;
-    });
+    try {
+      final result = await widget.repository.fetchSlots(widget.doctorId, selectedDate);
+      if (!mounted) return;
+      setState(() {
+        slots = result;
+        isLoadingSlots = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        slots = [];
+        isLoadingSlots = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not load slots. Please try again.'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void onDateSelected(DateTime date) {
@@ -139,14 +82,14 @@ class BookAppointmentState extends State<BookAppointment> {
   Future<void> onConfirmBooking() async {
     if (selectedSlot == null) return;
     setState(() => isBooking = true);
-    final success = await widget.repository.bookSlot(
-      widget.doctorName,
+    final result = await widget.repository.bookSlot(
+      widget.doctorId,
       selectedDate,
       selectedSlot!.id,
     );
     if (!mounted) return;
     setState(() => isBooking = false);
-    if (success) {
+    if (result.success) {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -199,6 +142,16 @@ class BookAppointmentState extends State<BookAppointment> {
           ],
         ),
       );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.message ?? 'Could not book this slot.'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      // Refresh so the slot list reflects the latest availability.
+      loadSlots();
     }
   }
 
@@ -365,7 +318,7 @@ class BookAppointmentState extends State<BookAppointment> {
     );
   }
 
-  Widget buildTimeSlotCard(TimeSlotModel slot) {
+  Widget buildTimeSlotCard(AppointmentSlot slot) {
     final isSelected = selectedSlot?.id == slot.id;
 
     Color borderColor;

@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/core/theme/app_colors.dart';
+import 'package:shongi/features/doctors/models/report_data.dart';
 
 class ReportPreview extends StatelessWidget {
-  const ReportPreview({super.key});
+  final ReportData data;
+
+  const ReportPreview({
+    super.key,
+    this.data = const ReportData(
+      cycleHistory: 'No cycle data yet',
+      mainSymptoms: 'No symptoms logged yet',
+      lifestyle: 'Log your day to build lifestyle insights',
+      last30Days: '0 logs completed',
+    ),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +74,7 @@ class ReportPreview extends StatelessWidget {
                   color: chipBackground,
                 ),
                 child: Text(
-                  "Updated Today",
+                  data.updatedLabel,
                   style: GoogleFonts.poppins(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -76,25 +87,25 @@ class ReportPreview extends StatelessWidget {
           const SizedBox(height: 16),
           buildReportCard(
             "Cycle History",
-            "Irregular — avg 30 days",
+            data.cycleHistory,
             Icons.sync_rounded,
           ),
           const SizedBox(height: 10),
           buildReportCard(
             "Main Symptoms",
-            "Fatigue, mood swings",
+            data.mainSymptoms,
             Icons.notes_rounded,
           ),
           const SizedBox(height: 10),
           buildReportCard(
             "Lifestyle",
-            "Moderate activity, avg 7.1h sleep",
+            data.lifestyle,
             Icons.spa_rounded,
           ),
           const SizedBox(height: 10),
           buildReportCard(
             "Last 30 Days",
-            "28 logs completed",
+            data.last30Days,
             Icons.bar_chart_rounded,
           ),
         ],

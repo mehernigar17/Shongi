@@ -3,47 +3,55 @@ import 'package:flutter/material.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 
 class StatsSummaryCards extends StatelessWidget {
-  const StatsSummaryCards({super.key});
+  final double? sleepAvg;
+  final double? cycleAvg;
+  final double? moodPositivePercent;
+
+  const StatsSummaryCards({
+    super.key,
+    this.sleepAvg,
+    this.cycleAvg,
+    this.moodPositivePercent,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
-
         Expanded(
           child: _SummaryCard(
             icon: Icons.nightlight_round,
-            value: "7.1h",
+            value: sleepAvg != null ? '${sleepAvg!.toStringAsFixed(1)}h' : '--',
             label: "Sleep",
-            trend: "+5%",
-            trendUp: true,
-            tint: Color(0xFFEDE4FF),
+            trend: sleepAvg != null ? (sleepAvg! >= 7 ? "+Good" : "Low") : "—",
+            trendUp: sleepAvg != null && sleepAvg! >= 7,
+            tint: const Color(0xFFEDE4FF),
           ),
         ),
-
-        SizedBox(width: 8),
-
+        const SizedBox(width: 8),
         Expanded(
           child: _SummaryCard(
             icon: Icons.sync_rounded,
-            value: "30d",
+            value: cycleAvg != null ? '${cycleAvg!.round()}d' : '--',
             label: "Cycle",
-            trend: "-3%",
-            trendUp: false,
-            tint: Color(0xFFF3E7FF),
+            trend: cycleAvg != null ? "Avg" : "—",
+            trendUp: true,
+            tint: const Color(0xFFF3E7FF),
           ),
         ),
-
-        SizedBox(width: 8),
-
+        const SizedBox(width: 8),
         Expanded(
           child: _SummaryCard(
             icon: Icons.sentiment_very_satisfied_rounded,
-            value: "62%",
+            value: moodPositivePercent != null
+                ? '${moodPositivePercent!.round()}%'
+                : '--',
             label: "Mood",
-            trend: "+5%",
-            trendUp: true,
-            tint: Color(0xFFF0E8FF),
+            trend: moodPositivePercent != null && moodPositivePercent! >= 50
+                ? "+Good"
+                : "—",
+            trendUp: moodPositivePercent != null && moodPositivePercent! >= 50,
+            tint: const Color(0xFFF0E8FF),
           ),
         ),
       ],
@@ -72,16 +80,12 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
-
       decoration: BoxDecoration(
         color: Colors.white,
-
         borderRadius: BorderRadius.circular(22),
-
         border: Border.all(
           color: const Color(0xFFE9DEF8),
         ),
-
         boxShadow: [
           BoxShadow(
             color: accentColor.withOpacity(0.03),
@@ -90,52 +94,41 @@ class _SummaryCard extends StatelessWidget {
           ),
         ],
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-
               Container(
                 padding: const EdgeInsets.all(7),
-
                 decoration: BoxDecoration(
                   color: tint,
                   borderRadius: BorderRadius.circular(12),
                 ),
-
                 child: Icon(
                   icon,
                   size: 15,
                   color: accentColor,
                 ),
               ),
-
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 6,
                   vertical: 4,
                 ),
-
                 decoration: BoxDecoration(
                   color: trendUp
                       ? const Color(0xFFEAF8F1)
                       : const Color(0xFFFFEEF1),
-
                   borderRadius: BorderRadius.circular(10),
                 ),
-
                 child: Text(
                   trend,
                   style: TextStyle(
                     color: trendUp
                         ? const Color(0xFF3EB97A)
                         : const Color(0xFFFF6B81),
-
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
                   ),
@@ -143,10 +136,7 @@ class _SummaryCard extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 16),
-
-
           Text(
             value,
             style: const TextStyle(
@@ -156,10 +146,7 @@ class _SummaryCard extends StatelessWidget {
               height: 1,
             ),
           ),
-
           const SizedBox(height: 5),
-
-
           Text(
             label,
             style: TextStyle(

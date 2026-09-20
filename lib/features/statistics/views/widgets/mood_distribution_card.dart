@@ -3,24 +3,49 @@ import 'package:flutter/material.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 
 class MoodDistributionCard extends StatelessWidget {
-  const MoodDistributionCard({super.key});
+  /// Mood emojis logged in the selected range.
+  final List<String> moods;
+
+  const MoodDistributionCard({super.key, this.moods = const []});
+
+  static const _moodOrder = ['😔', '😳', '🙂', '😊', '😄'];
+
+  double? get _positivePercent {
+    if (moods.isEmpty) return null;
+    final positive = moods.where((m) => m == '🙂' || m == '😊' || m == '😄').length;
+    return positive / moods.length * 100;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final counts = <String, int>{};
+    for (final m in moods) {
+      counts[m] = (counts[m] ?? 0) + 1;
+    }
+    final total = moods.length;
+    final positive = _positivePercent;
+
+    final bars = <Widget>[];
+    for (final emoji in _moodOrder) {
+      final count = counts[emoji] ?? 0;
+      final fraction = total == 0 ? 0.0 : count / total;
+      bars.add(_MoodBar(
+        emoji: emoji,
+        value: fraction,
+        percent: total == 0 ? '0%' : '${(fraction * 100).round()}%',
+      ));
+      bars.add(const SizedBox(height: 14));
+    }
+
     return Container(
       width: double.infinity,
-
       padding: const EdgeInsets.all(16),
-
       decoration: BoxDecoration(
         color: Colors.white,
-
         borderRadius: BorderRadius.circular(26),
-
         border: Border.all(
           color: const Color(0xFFE9DEF8),
         ),
-
         boxShadow: [
           BoxShadow(
             color: accentColor.withOpacity(0.04),
@@ -29,11 +54,9 @@ class MoodDistributionCard extends StatelessWidget {
           ),
         ],
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           const Text(
             "Mood Distribution",
             style: TextStyle(
@@ -42,77 +65,34 @@ class MoodDistributionCard extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-
           const SizedBox(height: 2),
-
           Text(
-            "This week",
+            "This period",
             style: TextStyle(
               color: textColor.withOpacity(0.5),
               fontSize: 10.5,
               fontWeight: FontWeight.w500,
             ),
           ),
-
           const SizedBox(height: 18),
-
-          const _MoodBar(
-            emoji: "😔",
-            value: 0.12,
-            percent: "12%",
-          ),
-
-          SizedBox(height: 14),
-
-          const _MoodBar(
-            emoji: "😳",
-            value: 0.19,
-            percent: "19%",
-          ),
-
-          SizedBox(height: 14),
-
-          const _MoodBar(
-            emoji: "🙂",
-            value: 0.31,
-            percent: "31%",
-          ),
-
-          SizedBox(height: 14),
-
-          const _MoodBar(
-            emoji: "😊",
-            value: 0.23,
-            percent: "23%",
-          ),
-
-          SizedBox(height: 14),
-
-          const _MoodBar(
-            emoji: "😄",
-            value: 0.15,
-            percent: "15%",
-          ),
-
-          const SizedBox(height: 18),
-
+          ...bars,
+          const SizedBox(height: 4),
           Container(
             width: double.infinity,
-
             padding: const EdgeInsets.symmetric(
               horizontal: 13,
               vertical: 12,
             ),
-
             decoration: BoxDecoration(
               color: const Color(0xFFF8F2FC),
               borderRadius: BorderRadius.circular(16),
             ),
-
             child: Text(
-              "💜 62% of your days this week were positive. "
-                  "Keep it up!",
-
+              positive == null
+                  ? "💜 Log your mood each day to see your mood distribution."
+                  : positive >= 50
+                      ? "💜 ${positive.round()}% of your logged days were positive. Keep it up!"
+                      : "💜 ${positive.round()}% of your logged days were positive. Self-care can help lift your mood.",
               style: TextStyle(
                 color: accentColor.withOpacity(0.88),
                 fontSize: 11.5,
@@ -142,7 +122,6 @@ class _MoodBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-
         SizedBox(
           width: 24,
           child: Text(
@@ -150,27 +129,20 @@ class _MoodBar extends StatelessWidget {
             style: const TextStyle(fontSize: 16),
           ),
         ),
-
         const SizedBox(width: 10),
-
         Expanded(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
-
             child: Stack(
               children: [
-
                 Container(
                   height: 10,
                   color: const Color(0xFFF0E7FA),
                 ),
-
                 FractionallySizedBox(
                   widthFactor: value,
-
                   child: Container(
                     height: 10,
-
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
@@ -185,12 +157,9 @@ class _MoodBar extends StatelessWidget {
             ),
           ),
         ),
-
         const SizedBox(width: 12),
-
         SizedBox(
           width: 32,
-
           child: Text(
             percent,
             textAlign: TextAlign.right,

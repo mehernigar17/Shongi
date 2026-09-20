@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 import 'package:shongi/features/doctors/models/doctor.dart';
+import 'package:shongi/features/doctors/repositories/appointment_repository.dart';
 import 'package:shongi/features/doctors/views/widgets/BookingPage.dart';
 
 typedef DoctorModel = Doctor;
@@ -27,11 +28,13 @@ final List<Doctor> sampleDoctors = [
 class ViewProfile extends StatelessWidget {
   final Doctor doctor;
   final ScrollController? scrollController;
+  final AppointmentRepository? appointmentRepository;
 
   const ViewProfile({
     super.key,
     required this.doctor,
     this.scrollController,
+    this.appointmentRepository,
   });
 
   Widget _buildAvatar() {
@@ -335,7 +338,9 @@ class ViewProfile extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => BookAppointment(
+                    doctorId: doctor.id,
                     doctorName: doctor.name,
+                    repository: appointmentRepository,
                   ),
                 ),
               );

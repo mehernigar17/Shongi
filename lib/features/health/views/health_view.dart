@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shongi/app/app_dependencies.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 import 'package:shongi/features/doctors/views/doctors_view.dart';
 import 'package:shongi/features/health/data/mock_exercise_repository.dart';
@@ -12,8 +13,9 @@ import 'package:shongi/features/skincare/views/skincare_view.dart';
 
 class HealthScreen extends StatefulWidget {
   final HealthViewModel? viewModel;
+  final AppDependencies? dependencies;
 
-  const HealthScreen({super.key, this.viewModel});
+  const HealthScreen({super.key, this.viewModel, this.dependencies});
 
   @override
   State<HealthScreen> createState() => _HealthScreenState();
@@ -64,11 +66,11 @@ class _HealthScreenState extends State<HealthScreen> {
                   ),
                   const SizedBox(height: 16),
                   if (_viewModel.hubTag == "Skin Care")
-                    const SkincareView()
+                    SkincareView(dependencies: widget.dependencies)
                   else if (_viewModel.hubTag == "Hair Care")
-                    const HaircareView()
+                    HaircareView(dependencies: widget.dependencies)
                   else if (_viewModel.hubTag == "Doctor")
-                    const DoctorsView()
+                    DoctorsView(dependencies: widget.dependencies)
                   else ...[
                     PersonalizedplanHealthpage(
                       plans: _viewModel.workoutPlans,

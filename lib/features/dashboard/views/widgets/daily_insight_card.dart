@@ -3,7 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 
 class DailyInsightCard extends StatelessWidget {
-  const DailyInsightCard({super.key});
+  final String title;
+  final String body;
+  final String tip;
+
+  const DailyInsightCard({
+    super.key,
+    this.title = 'Start logging your day',
+    this.body = 'Track sleep, mood, food and health to unlock personalized insights.',
+    this.tip = 'Tap Start Logging to add today\'s entry',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +36,6 @@ class DailyInsightCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           Row(
             children: [
               Icon(
@@ -35,9 +43,7 @@ class DailyInsightCard extends StatelessWidget {
                 size: 15,
                 color: accentColor,
               ),
-
               const SizedBox(width: 6),
-
               Text(
                 "TODAY'S INSIGHT",
                 style: TextStyle(
@@ -49,11 +55,9 @@ class DailyInsightCard extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 12),
-
           Text(
-            "You slept less than usual yesterday 🌙",
+            title,
             style: TextStyle(
               color: textColor,
               fontSize: 15,
@@ -61,11 +65,9 @@ class DailyInsightCard extends StatelessWidget {
               height: 1.35,
             ),
           ),
-
           const SizedBox(height: 8),
-
           Text(
-            "Try maintaining 7-8 hours for better cycle balance and hormone health.",
+            body,
             style: TextStyle(
               color: textColor.withOpacity(0.58),
               fontSize: 12,
@@ -73,9 +75,7 @@ class DailyInsightCard extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-
           const SizedBox(height: 14),
-
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(
@@ -88,17 +88,14 @@ class DailyInsightCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-
                 const Text(
                   "💡",
                   style: TextStyle(fontSize: 13),
                 ),
-
                 const SizedBox(width: 8),
-
                 Expanded(
                   child: Text(
-                    "Try a 10 min wind-down routine",
+                    tip,
                     style: TextStyle(
                       color: accentColor,
                       fontSize: 11.5,
@@ -106,7 +103,6 @@ class DailyInsightCard extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 12,

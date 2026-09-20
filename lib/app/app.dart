@@ -19,7 +19,7 @@ class ShongiApp extends StatelessWidget {
     routes: {
       '/onboarding': (_) =>
           OnboardingScreen(dependencies: dependencies),
-      '/home': (_) => const MainScreen(),
+      '/home': (_) => MainScreen(dependencies: dependencies),
     },
   );
 }

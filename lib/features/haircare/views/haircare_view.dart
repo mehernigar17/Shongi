@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shongi/app/app_dependencies.dart';
 import 'package:shongi/core/theme/app_colors.dart';
-import '../data/mock_haircare_repository.dart';
+import '../data/firestore_haircare_repository.dart';
 import '../viewmodels/haircare_view_model.dart';
 import 'widgets/haircare_reminder_dialog.dart';
 import 'widgets/haircare_routine_card.dart';
 
 class HaircareView extends StatefulWidget {
   final HaircareViewModel? viewModel;
+  final AppDependencies? dependencies;
 
-  const HaircareView({super.key, this.viewModel});
+  const HaircareView({super.key, this.viewModel, this.dependencies});
 
   @override
   State<HaircareView> createState() => _HaircareViewState();
@@ -24,8 +26,11 @@ class _HaircareViewState extends State<HaircareView> {
     super.initState();
     if (widget.viewModel != null) {
       _viewModel = widget.viewModel!;
+    } else if (widget.dependencies != null) {
+      _viewModel = HaircareViewModel(widget.dependencies!.haircareRepository);
+      _ownsViewModel = true;
     } else {
-      _viewModel = HaircareViewModel(MockHaircareRepository());
+      _viewModel = HaircareViewModel(FirestoreHaircareRepository());
       _ownsViewModel = true;
     }
   }
