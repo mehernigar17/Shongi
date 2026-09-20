@@ -133,6 +133,7 @@ class HomeScreenState extends State<HomeScreen> {
                         PeriodTrackerCard(
                           nextPeriodDate: data.nextPeriodDate,
                           avgCycleLength: data.avgCycleLength,
+                          avgPeriodDuration: data.avgPeriodDuration,
                           lastPeriodStart: data.lastPeriodStart,
                           onLogPeriod: _openPeriodLogSheet,
                           onViewCalendar: _showPeriodHistory,

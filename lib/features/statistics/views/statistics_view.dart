@@ -18,12 +18,18 @@ class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key, this.viewModel, this.dependencies});
 
   @override
-  State<StatisticsScreen> createState() => _StatisticsScreenState();
+  State<StatisticsScreen> createState() => StatisticsScreenState();
 }
 
-class _StatisticsScreenState extends State<StatisticsScreen> {
+class StatisticsScreenState extends State<StatisticsScreen> {
   late final StatisticsViewModel _vm;
   bool _ownsViewModel = false;
+
+  /// Re-fetches the currently selected range so the screen shows fresh
+  /// data after the user logs new entries.
+  void reload() {
+    _vm.selectRange(_vm.selectedRange);
+  }
 
   @override
   void initState() {
@@ -96,6 +102,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (_vm.isLoading && data != null)
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 8),
+                            child: LinearProgressIndicator(
+                              minHeight: 2,
+                              color: accentColor,
+                              backgroundColor: cardBorderColor,
+                            ),
+                          ),
                         StatsSummaryCards(
                           sleepAvg: sleepAvg,
                           cycleAvg: cycleAvg,

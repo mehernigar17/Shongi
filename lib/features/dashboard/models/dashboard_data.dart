@@ -11,6 +11,7 @@ class DashboardData {
   // Cycle
   final int cycleDay; // 1-based day of the current cycle
   final int avgCycleLength; // days
+  final int avgPeriodDuration; // days (from real logged periods)
   final int daysUntilNextPeriod;
   final DateTime? nextPeriodDate;
   final DateTime? lastPeriodStart;
@@ -34,6 +35,7 @@ class DashboardData {
     this.profile,
     this.cycleDay = 1,
     this.avgCycleLength = 28,
+    this.avgPeriodDuration = 5,
     this.daysUntilNextPeriod = 0,
     this.nextPeriodDate,
     this.lastPeriodStart,
@@ -55,6 +57,7 @@ class DashboardData {
     required UserProfile? profile,
     required List<PeriodEntry> periods,
     required List<DailyLog> logs,
+    int? profileAvgCycleLength,
   }) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -63,7 +66,9 @@ class DashboardData {
     final sorted = [...periods]..sort((a, b) => a.startDate.compareTo(b.startDate));
     final recentPeriods = sorted.reversed.take(6).toList();
 
-    int avgCycle = 28;
+    // Average cycle length from real gaps between period starts.
+    // Falls back to the user's profile setting, then 28.
+    int avgCycle = profileAvgCycleLength ?? 28;
     if (sorted.length >= 2) {
       final diffs = <int>[];
       for (var i = 1; i < sorted.length; i++) {
@@ -73,6 +78,13 @@ class DashboardData {
       if (diffs.isNotEmpty) {
         avgCycle = (diffs.reduce((a, b) => a + b) / diffs.length).round();
       }
+    }
+
+    // Average period duration from real logged start/end dates.
+    int avgDuration = 5;
+    if (sorted.isNotEmpty) {
+      final durations = sorted.map((p) => p.durationDays).toList();
+      avgDuration = (durations.reduce((a, b) => a + b) / durations.length).round();
     }
 
     DateTime? lastStart;
@@ -140,6 +152,7 @@ class DashboardData {
       profile: profile,
       cycleDay: cycleDay,
       avgCycleLength: avgCycle,
+      avgPeriodDuration: avgDuration,
       daysUntilNextPeriod: daysUntilNext,
       nextPeriodDate: nextPeriod,
       lastPeriodStart: lastStart,

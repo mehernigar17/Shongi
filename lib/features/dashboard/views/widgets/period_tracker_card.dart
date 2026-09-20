@@ -5,6 +5,7 @@ import 'package:shongi/core/theme/app_colors.dart';
 class PeriodTrackerCard extends StatelessWidget {
   final DateTime? nextPeriodDate;
   final int avgCycleLength;
+  final int avgPeriodDuration;
   final DateTime? lastPeriodStart;
   final VoidCallback? onLogPeriod;
   final VoidCallback? onViewCalendar;
@@ -13,6 +14,7 @@ class PeriodTrackerCard extends StatelessWidget {
     super.key,
     this.nextPeriodDate,
     this.avgCycleLength = 28,
+    this.avgPeriodDuration = 5,
     this.lastPeriodStart,
     this.onLogPeriod,
     this.onViewCalendar,
@@ -34,7 +36,7 @@ class PeriodTrackerCard extends StatelessWidget {
         : DateTime.now().subtract(const Duration(days: 3));
     final days = List.generate(7, (i) => stripStart.add(Duration(days: i)));
 
-    final expectedDuration = lastPeriodStart != null ? 5 : 5;
+    final expectedDuration = avgPeriodDuration > 0 ? avgPeriodDuration : 5;
 
     return Container(
       width: double.infinity,

@@ -9,6 +9,7 @@ class ReportData {
   final String mainSymptoms;
   final String lifestyle;
   final String last30Days;
+  final String suggestion;
   final String updatedLabel;
 
   const ReportData({
@@ -16,6 +17,7 @@ class ReportData {
     required this.mainSymptoms,
     required this.lifestyle,
     required this.last30Days,
+    this.suggestion = 'Log your day and periods to get personalized health suggestions.',
     this.updatedLabel = 'Updated Today',
   });
 
@@ -89,10 +91,11 @@ class ReportData {
     // ── Lifestyle ──────────────────────────────────────────────────
     final sleepLogs = logs.where((l) => l.sleepHours > 0).toList();
     String lifestyle;
+    double? avgSleep;
     if (sleepLogs.isEmpty) {
       lifestyle = 'Log your day to build lifestyle insights';
     } else {
-      final avgSleep =
+      avgSleep =
           sleepLogs.map((l) => l.sleepHours).reduce((a, b) => a + b) / sleepLogs.length;
       final activity = avgSleep >= 7 ? 'Good sleep' : 'Low sleep';
       lifestyle = '$activity, avg ${avgSleep.toStringAsFixed(1)}h sleep';
@@ -103,11 +106,42 @@ class ReportData {
     final recentLogs = logs.where((l) => !l.date.isBefore(cutoff)).length;
     final last30Days = '$recentLogs log${recentLogs == 1 ? '' : 's'} completed';
 
+    // ── Data-driven suggestion ─────────────────────────────────────
+    final suggestion = _buildSuggestion(
+      avgSleep: avgSleep,
+      cycleHistory: cycleHistory,
+      topSymptoms: topSymptoms,
+      recentLogs: recentLogs,
+    );
+
     return ReportData(
       cycleHistory: cycleHistory,
       mainSymptoms: mainSymptoms,
       lifestyle: lifestyle,
       last30Days: last30Days,
+      suggestion: suggestion,
     );
+  }
+
+  static String _buildSuggestion({
+    double? avgSleep,
+    required String cycleHistory,
+    required List<MapEntry<String, int>> topSymptoms,
+    required int recentLogs,
+  }) {
+    if (recentLogs == 0 && topSymptoms.isEmpty) {
+      return 'Start logging your day — sleep, mood and symptoms — so your doctor report becomes more complete.';
+    }
+    if (avgSleep != null && avgSleep < 7) {
+      return 'Your average sleep is ${avgSleep.toStringAsFixed(1)}h. Aim for 7–9h — better sleep helps regulate hormones and mood.';
+    }
+    if (cycleHistory.startsWith('Irregular')) {
+      return 'Your cycle looks irregular. Tracking stress, sleep and diet can help you and your doctor spot patterns.';
+    }
+    if (topSymptoms.isNotEmpty) {
+      final top = topSymptoms.first.key;
+      return '"$top" is your most logged symptom — worth mentioning at your next doctor visit.';
+    }
+    return 'You\'re doing great — keep up your healthy routine and keep logging!';
   }
 }

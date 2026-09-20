@@ -35,6 +35,10 @@ class FirestoreDashboardRepository implements DashboardRepository {
         ? UserProfile.fromMap(profileData)
         : null;
 
+    // The user's own cycle-length setting (set in onboarding/profile)
+    // is used as the fallback until 2+ periods are logged.
+    final profileAvgCycle = (profileData?['avgCycleLength'] as num?)?.toInt();
+
     final periodsSnap = await userRef.collection('periods').get();
     final periods = periodsSnap.docs
         .map((d) => PeriodEntry.fromMap(d.id, d.data()))
@@ -49,6 +53,7 @@ class FirestoreDashboardRepository implements DashboardRepository {
       profile: profile,
       periods: periods,
       logs: logs,
+      profileAvgCycleLength: profileAvgCycle,
     );
   }
 }

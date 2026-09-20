@@ -64,7 +64,7 @@ class CyclePatternsCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "Days per cycle",
+                    "Days per cycle · full history",
                     style: TextStyle(
                       color: textColor.withOpacity(0.5),
                       fontSize: 10.5,
@@ -86,8 +86,8 @@ class CyclePatternsCard extends StatelessWidget {
                   avg == null
                       ? "No data"
                       : _isRegular
-                          ? "− Regular"
-                          : "− Irregular",
+                          ? "− Regular · ${cycleDays.length} cycles"
+                          : "− Irregular · ${cycleDays.length} cycles",
                   style: const TextStyle(
                     color: Color(0xFFFF6B8A),
                     fontSize: 10.5,

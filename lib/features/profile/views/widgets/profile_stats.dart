@@ -12,9 +12,9 @@ class ProfileStats extends StatelessWidget {
 
   const ProfileStats({
     super.key,
-    this.streak = "14d",
-    this.logs = "86",
-    this.level = "Silver",
+    this.streak = "0d",
+    this.logs = "0",
+    this.level = "New",
     this.onStreakTap,
     this.onLogsTap,
     this.onLevelTap,

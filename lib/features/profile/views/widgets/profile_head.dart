@@ -9,8 +9,8 @@ class ProfileHeader extends StatelessWidget {
 
   const ProfileHeader({
     super.key,
-    this.name = "Aria",
-    this.subtitle = "Member since 2024",
+    this.name = "Your Name",
+    this.subtitle = "Member",
     this.onEdit,
   });
 

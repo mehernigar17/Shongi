@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/core/theme/app_colors.dart';
+import 'package:shongi/features/profile/viewmodels/profile_view_model.dart';
 
 class AchievementsCard extends StatelessWidget {
+  final List<AchievementStatus> achievements;
   final ValueChanged<String>? onBadgeTap;
 
-  const AchievementsCard({super.key, this.onBadgeTap});
+  const AchievementsCard({
+    super.key,
+    this.achievements = const [],
+    this.onBadgeTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -56,34 +62,18 @@ class AchievementsCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              AchievementBadge(
-                icon: Icons.local_fire_department_rounded,
-                iconColor: pinkAccent,
-                bgColor: pinkBackground,
-                title: "2-week streak",
-                onTap: onBadgeTap != null ? () => onBadgeTap!("2-week streak") : null,
-              ),
-              AchievementBadge(
-                icon: Icons.edit_note_rounded,
-                iconColor: accentColor,
-                bgColor: chipBackground,
-                title: "30 logs",
-                onTap: onBadgeTap != null ? () => onBadgeTap!("30 logs") : null,
-              ),
-              AchievementBadge(
-                icon: Icons.favorite_rounded,
-                iconColor: const Color(0xFF8B5CF6),
-                bgColor: const Color(0xFFF3ECFF),
-                title: "Self-care pro",
-                onTap: onBadgeTap != null ? () => onBadgeTap!("Self-care pro") : null,
-              ),
-              AchievementBadge(
-                icon: Icons.local_florist_rounded,
-                iconColor: greenAccent,
-                bgColor: greenBackground,
-                title: "3-mo member",
-                onTap: onBadgeTap != null ? () => onBadgeTap!("3-mo member") : null,
-              ),
+              for (final a in achievements)
+                AchievementBadge(
+                  icon: a.icon,
+                  iconColor: a.iconColor,
+                  bgColor: a.bgColor,
+                  title: a.title,
+                  unlocked: a.unlocked,
+                  progress: a.progress,
+                  onTap: a.unlocked && onBadgeTap != null
+                      ? () => onBadgeTap!(a.title)
+                      : null,
+                ),
             ],
           ),
         ],
@@ -97,6 +87,8 @@ class AchievementBadge extends StatelessWidget {
   final Color iconColor;
   final Color bgColor;
   final String title;
+  final bool unlocked;
+  final String? progress;
   final VoidCallback? onTap;
 
   const AchievementBadge({
@@ -105,31 +97,61 @@ class AchievementBadge extends StatelessWidget {
     required this.iconColor,
     required this.bgColor,
     required this.title,
+    this.unlocked = true,
+    this.progress,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = unlocked ? iconColor : textSecondary;
+    final effectiveBg = unlocked ? bgColor : const Color(0xFFF1F0F4);
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
         width: 70,
         child: Column(
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              height: 48,
-              width: 48,
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: iconColor.withValues(alpha: 0.15)),
-              ),
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: 22,
-              ),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 48,
+                  width: 48,
+                  decoration: BoxDecoration(
+                    color: effectiveBg,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: effectiveColor.withValues(alpha: unlocked ? 0.15 : 0.1),
+                    ),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: effectiveColor,
+                    size: 22,
+                  ),
+                ),
+                if (!unlocked)
+                  Positioned(
+                    right: -3,
+                    bottom: -3,
+                    child: Container(
+                      height: 18,
+                      width: 18,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: cardBorderColor),
+                      ),
+                      child: Icon(
+                        Icons.lock_rounded,
+                        size: 11,
+                        color: textSecondary,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 6),
             Text(
@@ -137,11 +159,24 @@ class AchievementBadge extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 10,
-                color: textSecondary,
+                color: unlocked ? textSecondary : textSecondary.withValues(alpha: 0.7),
                 fontWeight: FontWeight.w500,
                 height: 1.2,
               ),
             ),
+            if (progress != null && !unlocked) ...[
+              const SizedBox(height: 2),
+              Text(
+                progress!,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 8.5,
+                  color: textSecondary.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w400,
+                  height: 1.1,
+                ),
+              ),
+            ],
           ],
         ),
       ),

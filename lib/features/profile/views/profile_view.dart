@@ -21,12 +21,18 @@ class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, this.viewModel, this.dependencies});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfileScreen> createState() => ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class ProfileScreenState extends State<ProfileScreen> {
   late final ProfileViewModel _vm;
   bool _ownsViewModel = false;
+
+  /// Re-fetches profile + settings + logs so streak, level and
+  /// achievements reflect the latest activity.
+  void reload() {
+    _vm.load();
+  }
 
   @override
   void initState() {
@@ -37,6 +43,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _vm = ProfileViewModel(
         widget.dependencies!.profileRepository,
         widget.dependencies!.userSettingsRepository,
+        logRepository: widget.dependencies!.logRepository,
       );
       _ownsViewModel = true;
     } else {
@@ -457,8 +464,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
                     ProfileStats(
-                      streak: _vm.streakDays,
-                      logs: _vm.totalLogs,
+                      streak: _vm.streakLabel,
+                      logs: _vm.totalLogsLabel,
                       level: _vm.userLevel,
                       onStreakTap: () => _showSnackBar('Streak details coming soon!'),
                       onLogsTap: () => _showSnackBar('Log history coming soon!'),
@@ -519,6 +526,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
                     AchievementsCard(
+                      achievements: _vm.achievements,
                       onBadgeTap: (title) {
                         _showSnackBar('Achievement: $title');
                       },

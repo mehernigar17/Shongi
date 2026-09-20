@@ -28,10 +28,14 @@ class FirestoreLogRepository implements LogRepository {
   Future<List<DailyLog>> loadLogs({DateTime? from, DateTime? to}) async {
     var query = _collection().orderBy('date', descending: true);
     if (from != null) {
-      query = query.where('date', isGreaterThanOrEqualTo: from.toIso8601String());
+      // Normalize to midnight so logs stored at 00:00:00 on the
+      // boundary day are included.
+      final fromMidnight = DateTime(from.year, from.month, from.day);
+      query = query.where('date', isGreaterThanOrEqualTo: fromMidnight.toIso8601String());
     }
     if (to != null) {
-      query = query.where('date', isLessThanOrEqualTo: to.toIso8601String());
+      final toMidnight = DateTime(to.year, to.month, to.day);
+      query = query.where('date', isLessThanOrEqualTo: toMidnight.toIso8601String());
     }
     final snap = await query.get();
     return snap.docs.map((d) => DailyLog.fromMap(d.id, d.data())).toList();

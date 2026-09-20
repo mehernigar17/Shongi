@@ -108,6 +108,34 @@ class ReportPreview extends StatelessWidget {
             data.last30Days,
             Icons.bar_chart_rounded,
           ),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F2FC),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: cardBorderColor.withValues(alpha: 0.5)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.lightbulb_rounded, size: 16, color: accentColor),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    data.suggestion,
+                    style: GoogleFonts.poppins(
+                      color: accentColor.withValues(alpha: 0.9),
+                      fontSize: 11.5,
+                      height: 1.45,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

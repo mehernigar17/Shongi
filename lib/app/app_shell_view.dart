@@ -17,6 +17,8 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   final GlobalKey<HomeScreenState> _homeKey = GlobalKey<HomeScreenState>();
+  final GlobalKey<StatisticsScreenState> _statsKey = GlobalKey<StatisticsScreenState>();
+  final GlobalKey<ProfileScreenState> _profileKey = GlobalKey<ProfileScreenState>();
 
   late final List<Widget> _pages;
 
@@ -26,18 +28,23 @@ class _MainScreenState extends State<MainScreen> {
     final deps = widget.dependencies;
     _pages = [
       HomeScreen(key: _homeKey, dependencies: deps),
-      StatisticsScreen(dependencies: deps),
+      StatisticsScreen(key: _statsKey, dependencies: deps),
       HealthScreen(dependencies: deps),
-      ProfileScreen(dependencies: deps),
+      ProfileScreen(key: _profileKey, dependencies: deps),
     ];
   }
 
   void _onItemSelected(int index) {
     setState(() => _selectedIndex = index);
-    // Refresh the home screen with fresh Firestore data whenever the
-    // user navigates back to it (e.g. after logging a period).
-    if (index == 0) {
-      _homeKey.currentState?.reload();
+    // Refresh each screen with fresh Firestore data whenever the user
+    // navigates back to it (e.g. after logging a period or a daily log).
+    switch (index) {
+      case 0:
+        _homeKey.currentState?.reload();
+      case 1:
+        _statsKey.currentState?.reload();
+      case 3:
+        _profileKey.currentState?.reload();
     }
   }
 
