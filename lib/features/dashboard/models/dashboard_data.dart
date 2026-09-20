@@ -106,7 +106,13 @@ class DashboardData {
       nextPeriod = lastStart.add(Duration(days: avgCycle));
       daysUntilNext = nextPeriod.difference(today).inDays;
       if (daysUntilNext < 0) daysUntilNext = 0;
-      cycleStatusLabel = 'Next period in ~$daysUntilNext days';
+      if (cycleDay > avgCycle) {
+        // The predicted date has passed without a new period being
+        // logged — show an honest overdue state instead of "~0 days".
+        cycleStatusLabel = 'Period overdue — log your period';
+      } else {
+        cycleStatusLabel = 'Next period in ~$daysUntilNext days';
+      }
     }
 
     // ── Log stats ───────────────────────────────────────────────

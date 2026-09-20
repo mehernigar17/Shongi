@@ -29,11 +29,16 @@ class PeriodTrackerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final next = nextPeriodDate;
     final hasData = next != null;
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final daysUntilNext = hasData ? next.difference(today).inDays : 0;
+    final isOverdue = hasData && daysUntilNext < 0;
 
     // Build a 7-day strip centered on the next period date.
-    final stripStart = hasData
+    // When the prediction is overdue, center on today instead so the
+    // strip stays useful.
+    final stripStart = hasData && !isOverdue
         ? next.subtract(const Duration(days: 3))
-        : DateTime.now().subtract(const Duration(days: 3));
+        : today.subtract(const Duration(days: 3));
     final days = List.generate(7, (i) => stripStart.add(Duration(days: i)));
 
     final expectedDuration = avgPeriodDuration > 0 ? avgPeriodDuration : 5;
@@ -99,9 +104,11 @@ class PeriodTrackerCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            hasData
-                ? 'Next period in ~${next.difference(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day)).inDays} days'
-                : 'Log your period to see predictions',
+            !hasData
+                ? 'Log your period to see predictions'
+                : isOverdue
+                    ? 'Period overdue — log your period'
+                    : 'Next period in ~$daysUntilNext days',
             style: const TextStyle(
               color: textColor,
               fontSize: 15,
