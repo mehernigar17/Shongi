@@ -2,6 +2,10 @@
 
 A new Flutter project.
 
+RevenueCat Doctors integration: see [setup and testing](docs/revenuecat.md).
+Normal Android/iOS `flutter run` builds enable RevenueCat Test Store purchases.
+The **Shongi (RevenueCat Test Store)** VS Code configuration supports local key overrides.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

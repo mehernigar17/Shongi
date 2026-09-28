@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../subscriptions/subscription_gate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 import 'package:shongi/features/doctors/models/doctor.dart';
@@ -385,6 +386,10 @@ class ViewProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return SubscriptionGate(builder: _buildContent, autoPresent: false);
+  }
+
+  Widget _buildContent(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 32),
       child: ListView(

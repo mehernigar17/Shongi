@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../subscriptions/subscription_gate.dart';
+import '../../../subscriptions/subscription_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 import 'package:shongi/features/doctors/data/firestore_appointment_repository.dart';
@@ -81,6 +83,8 @@ class BookAppointmentState extends State<BookAppointment> {
 
   Future<void> onConfirmBooking() async {
     if (selectedSlot == null) return;
+    await SubscriptionService.instance.refresh();
+    if (!mounted || !SubscriptionService.instance.hasAccess) return;
     setState(() => isBooking = true);
     final result = await widget.repository.bookSlot(
       widget.doctorId,
@@ -528,6 +532,10 @@ class BookAppointmentState extends State<BookAppointment> {
 
   @override
   Widget build(BuildContext context) {
+    return SubscriptionGate(builder: _buildContent, autoPresent: false);
+  }
+
+  Widget _buildContent(BuildContext context) {
     return Scaffold(
       backgroundColor: pageBackground,
       body: Column(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../subscriptions/subscription_gate.dart';
 import 'package:shongi/app/app_dependencies.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 import 'package:shongi/features/doctors/data/mock_doctor_repository.dart';
@@ -16,17 +17,29 @@ import 'package:shongi/features/doctors/views/widgets/report_preview.dart';
 /// Firestore records (profile + logs + periods); the specialist list is
 /// curated static content, but booking writes to the user's own
 /// `users/{uid}/appointments` collection.
-class DoctorsView extends StatefulWidget {
+class DoctorsView extends StatelessWidget {
+  const DoctorsView({super.key, this.viewModel, this.dependencies});
   final DoctorsViewModel? viewModel;
   final AppDependencies? dependencies;
 
-  const DoctorsView({super.key, this.viewModel, this.dependencies});
-
   @override
-  State<DoctorsView> createState() => _DoctorsViewState();
+  Widget build(BuildContext context) => SubscriptionGate(
+    service: dependencies?.subscriptions,
+    builder: (_) => _DoctorsContent(viewModel: viewModel, dependencies: dependencies),
+  );
 }
 
-class _DoctorsViewState extends State<DoctorsView> {
+class _DoctorsContent extends StatefulWidget {
+  final DoctorsViewModel? viewModel;
+  final AppDependencies? dependencies;
+
+  const _DoctorsContent({this.viewModel, this.dependencies});
+
+  @override
+  State<_DoctorsContent> createState() => _DoctorsViewState();
+}
+
+class _DoctorsViewState extends State<_DoctorsContent> {
   late final DoctorsViewModel _viewModel;
   bool _ownsViewModel = false;
 

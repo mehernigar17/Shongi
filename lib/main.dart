@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'app/app.dart';
 import 'app/app_dependencies.dart';
 import 'firebase_options.dart';
+import 'features/subscriptions/subscription_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,7 @@ Future<void> main() async {
     runApp(FirebaseErrorScreen(error: e.toString()));
     return;
   }
+  SubscriptionService.instance.start();
   runApp(ShongiApp(dependencies: AppDependencies()));
 }
 

@@ -16,10 +16,12 @@ import '../features/skincare/data/firestore_skincare_repository.dart';
 import '../features/skincare/repositories/skincare_repository.dart';
 import '../features/statistics/data/firestore_statistics_repository.dart';
 import '../features/statistics/repositories/statistics_repository.dart';
+import '../features/subscriptions/subscription_service.dart';
 
 /// Central registry of repositories. Every repository is scoped to the
 /// signed-in Firebase user, so all data is per-user by construction.
 class AppDependencies {
+  SubscriptionService get subscriptions => SubscriptionService.instance;
   AppDependencies()
       : profileRepository = FirestoreProfileRepository(),
         userSettingsRepository = FirestoreUserSettingsRepository(),

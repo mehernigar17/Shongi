@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../subscriptions/subscription_gate.dart';
+import '../../subscriptions/subscription_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/app/app_dependencies.dart';
 import 'package:shongi/core/theme/app_colors.dart';
@@ -531,6 +533,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                         _showSnackBar('Achievement: $title');
                       },
                     ),
+                    const SizedBox(height: 16),
+                    SubscriptionCard(service: widget.dependencies?.subscriptions ?? SubscriptionService.instance),
                     const SizedBox(height: 16),
                     SignOutButton(
                       onTap: _showSignOutDialog,
