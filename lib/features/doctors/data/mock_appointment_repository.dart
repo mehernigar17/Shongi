@@ -13,14 +13,12 @@ class MockAppointmentRepository implements AppointmentRepository {
   Future<BookingResult> bookSlot(
     String doctorId,
     DateTime date,
-    String slotId, {
-    required String consultName,
-    required String consultSpecialty,
-  }) async {
+    String slotId,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 250));
     return const BookingResult(
       success: true,
-      message: 'Request saved! Details have been added to your account.',
+      message: 'Appointment confirmed! Details have been sent to your email.',
     );
   }
 

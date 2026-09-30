@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../subscriptions/subscription_gate.dart';
 import 'package:shongi/app/app_dependencies.dart';
 import 'package:shongi/core/theme/app_colors.dart';
-import 'package:shongi/features/doctors/data/consult_catalog_repository.dart';
+import 'package:shongi/features/doctors/data/mock_doctor_repository.dart';
 import 'package:shongi/features/doctors/models/report_data.dart';
 import 'package:shongi/features/doctors/viewmodels/doctors_view_model.dart';
 import 'package:shongi/features/doctors/views/widgets/Recommended_Doctor.dart';
@@ -52,7 +52,7 @@ class _DoctorsViewState extends State<_DoctorsContent> {
     if (widget.viewModel != null) {
       _viewModel = widget.viewModel!;
     } else {
-      _viewModel = DoctorsViewModel(ConsultCatalogRepository());
+      _viewModel = DoctorsViewModel(MockDoctorRepository());
       _ownsViewModel = true;
     }
     _loadReport();
@@ -154,7 +154,7 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
     if (widget.viewModel != null) {
       _viewModel = widget.viewModel!;
     } else {
-      _viewModel = DoctorsViewModel(ConsultCatalogRepository());
+      _viewModel = DoctorsViewModel(MockDoctorRepository());
       _ownsViewModel = true;
     }
   }

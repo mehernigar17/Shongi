@@ -10,14 +10,12 @@ import 'package:shongi/features/doctors/repositories/appointment_repository.dart
 class BookAppointment extends StatefulWidget {
   final String doctorId;
   final String doctorName;
-  final String doctorSpecialty;
   final AppointmentRepository repository;
 
   BookAppointment({
     super.key,
     required this.doctorId,
     required this.doctorName,
-    required this.doctorSpecialty,
     AppointmentRepository? repository,
   }) : repository = repository ?? FirestoreAppointmentRepository();
 
@@ -92,8 +90,6 @@ class BookAppointmentState extends State<BookAppointment> {
       widget.doctorId,
       selectedDate,
       selectedSlot!.id,
-      consultName: widget.doctorName,
-      consultSpecialty: widget.doctorSpecialty,
     );
     if (!mounted) return;
     setState(() => isBooking = false);
@@ -125,7 +121,7 @@ class BookAppointmentState extends State<BookAppointment> {
             ],
           ),
           content: Text(
-            '${widget.doctorName} requested for ${kMonthNames[selectedDate.month - 1]} ${selectedDate.day} at ${selectedSlot!.time}.',
+            'Appointment booked with ${widget.doctorName} on ${kMonthNames[selectedDate.month - 1]} ${selectedDate.day} at ${selectedSlot!.time}.',
             style: GoogleFonts.poppins(
               fontSize: 13,
               color: textSecondary,
