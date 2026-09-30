@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 import 'package:shongi/features/health/models/exercise.dart';
@@ -22,26 +23,82 @@ class ExerciseDetailSheet extends StatefulWidget {
   State<ExerciseDetailSheet> createState() => _ExerciseDetailSheetState();
 }
 
+/// Where the tutorial player currently is. YouTube reports failures through
+/// the controller rather than by throwing, so the phase is tracked explicitly
+/// to keep a dead or un-embeddable video from rendering as an unexplained black
+/// box.
+enum _PlayerPhase { idle, loading, ready, failed }
+
 class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
-  bool isPlaying = false;
+  _PlayerPhase _phase = _PlayerPhase.idle;
   YoutubePlayerController? playerController;
 
   void startVideo() {
-    playerController = YoutubePlayerController(
+    // A second tap while the player is already coming up would create another
+    // controller and leak the first one.
+    if (_phase == _PlayerPhase.loading || _phase == _PlayerPhase.ready) return;
+
+    setState(() => _phase = _PlayerPhase.loading);
+
+    final controller = YoutubePlayerController(
       initialVideoId: widget.exercise.youtubeId,
       flags: const YoutubePlayerFlags(
         autoPlay: true,
         mute: false,
       ),
     );
-    setState(() {
-      isPlaying = true;
+    controller.addListener(_onPlayerStateChanged);
+    setState(() => playerController = controller);
+  }
+
+  void _onPlayerStateChanged() {
+    if (!mounted) return;
+    final controller = playerController;
+    if (controller == null) return;
+
+    final value = controller.value;
+    if (_phase != _PlayerPhase.failed && value.hasError) {
+      setState(() => _phase = _PlayerPhase.failed);
+      return;
+    }
+    if (_phase == _PlayerPhase.loading && value.isReady) {
+      setState(() => _phase = _PlayerPhase.ready);
+    }
+  }
+
+  /// Sends the user to the real YouTube player, which is the escape hatch when
+  /// a video cannot be embedded or fails to load.
+  Future<void> _openOnYouTube() async {
+    final uri = Uri.https('www.youtube.com', '/watch', {
+      'v': widget.exercise.youtubeId,
     });
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open YouTube on this device.'),
+        ),
+      );
+    }
+  }
+
+  void _retryVideo() {
+    _disposePlayer();
+    setState(() => _phase = _PlayerPhase.idle);
+    startVideo();
+  }
+
+  void _disposePlayer() {
+    final controller = playerController;
+    if (controller == null) return;
+    controller.removeListener(_onPlayerStateChanged);
+    playerController = null;
+    controller.dispose();
   }
 
   @override
   void dispose() {
-    playerController?.dispose();
+    _disposePlayer();
     super.dispose();
   }
 
@@ -80,7 +137,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               const SizedBox(height: 16),
               buildBenefitsSection(),
               const SizedBox(height: 24),
-              if (isPlaying) buildVideoPlayer() else buildWatchTutorialButton(),
+              buildVideoSection(),
             ],
           ),
         );
@@ -344,14 +401,169 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     );
   }
 
-  Widget buildVideoPlayer() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: YoutubePlayer(
-        controller: playerController!,
-        showVideoProgressIndicator: true,
-        progressIndicatorColor: accentColor,
-      ),
-    );
+  /// Swaps between the start button, the loading box, the player, and the
+/// fallback card depending on how far the tutorial got.
+Widget buildVideoSection() {
+  switch (_phase) {
+    case _PlayerPhase.idle:
+      return buildWatchTutorialButton();
+    case _PlayerPhase.loading:
+      return _buildVideoPlaceholder(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(
+              width: 30,
+              height: 30,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.6,
+                color: accentColor,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Loading video...",
+              style: GoogleFonts.poppins(
+                color: textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    case _PlayerPhase.failed:
+      return _buildVideoUnavailableCard();
+    case _PlayerPhase.ready:
+      final controller = playerController;
+      if (controller == null) return buildWatchTutorialButton();
+      // YoutubePlayer lays out its own AspectRatio internally, so it is only
+      // clipped here — wrapping it in another AspectRatio would nest two and
+      // collapse the player height.
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: YoutubePlayer(
+          controller: controller,
+          showVideoProgressIndicator: true,
+          progressIndicatorColor: accentColor,
+        ),
+      );
   }
+}
+
+/// Fixed 16:9 placeholder used while the real player is still loading, so the
+/// sheet does not jump in size once the video appears.
+Widget _buildVideoPlaceholder({required Widget child}) {
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(20),
+    child: AspectRatio(
+      aspectRatio: 16 / 9,
+      child: Container(
+        color: Colors.black,
+        alignment: Alignment.center,
+        child: child,
+      ),
+    ),
+  );
+}
+
+Widget _buildVideoUnavailableCard() {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: cardBorderColor),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.cloud_off_rounded,
+              size: 20,
+              color: pinkAccent,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                "Video unavailable",
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: textColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "YouTube would not play this tutorial here. You can still watch it on YouTube.",
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: textSecondary,
+            height: 1.45,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 44,
+                child: ElevatedButton.icon(
+                  onPressed: _openOnYouTube,
+                  icon: const Icon(
+                    Icons.open_in_new_rounded,
+                    size: 17,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    "Open in YouTube",
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: const Color(0xFFE53935),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              height: 44,
+              child: OutlinedButton(
+                onPressed: _retryVideo,
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  "Retry",
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: accentColor,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
 }

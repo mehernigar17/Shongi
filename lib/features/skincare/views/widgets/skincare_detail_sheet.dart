@@ -4,19 +4,30 @@ import 'package:shongi/core/theme/app_colors.dart';
 import '../../models/skincare_routine.dart';
 
 class SkincareDetailSheet extends StatelessWidget {
-  final SkincareRoutine routine;
-
   const SkincareDetailSheet({
     super.key,
     required this.routine,
+    this.currentWeekNumber,
   });
 
-  static Future<void> show(BuildContext context, SkincareRoutine routine) {
+  final SkincareRoutine routine;
+
+  /// The week the user is on right now, so it can be marked in the plan.
+  final int? currentWeekNumber;
+
+  static Future<void> show(
+    BuildContext context,
+    SkincareRoutine routine, {
+    int? currentWeekNumber,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => SkincareDetailSheet(routine: routine),
+      builder: (context) => SkincareDetailSheet(
+        routine: routine,
+        currentWeekNumber: currentWeekNumber,
+      ),
     );
   }
 
@@ -24,6 +35,7 @@ class SkincareDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final maxHeight = mediaQuery.size.height * 0.88;
+    final accent = routine.gradientColors.first;
 
     return Container(
       constraints: BoxConstraints(maxHeight: maxHeight),
@@ -88,7 +100,7 @@ class SkincareDetailSheet extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Text(
-                        routine.duration,
+                        routine.planLengthLabel,
                         style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontSize: 12,
@@ -134,27 +146,40 @@ class SkincareDetailSheet extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+                const SizedBox(height: 10),
+                Text(
+                  'Each week builds on the last. Follow the steps for the week you are on.',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    height: 1.4,
+                  ),
+                ),
               ],
             ),
           ),
 
-          // Scrollable Steps List
+          // Scrollable plan: every week with its own steps
           Flexible(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 30),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Follow these steps in order for the best results.',
-                    style: GoogleFonts.poppins(
-                      color: textSecondary,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w500,
+                  for (final week in routine.weeks) ...[
+                    _WeekHeader(
+                      week: week,
+                      accent: accent,
+                      isCurrent: week.weekNumber == currentWeekNumber,
+                      isPast:
+                          currentWeekNumber != null &&
+                          week.weekNumber < currentWeekNumber!,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  ...routine.steps.map((step) => _buildStepCard(step)),
+                    const SizedBox(height: 12),
+                    ...week.steps.map((step) => _buildStepCard(step, accent)),
+                    const SizedBox(height: 20),
+                  ],
                 ],
               ),
             ),
@@ -164,7 +189,7 @@ class SkincareDetailSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildStepCard(SkincareStep step) {
+  Widget _buildStepCard(SkincareStep step, Color accent) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
@@ -189,7 +214,7 @@ class SkincareDetailSheet extends StatelessWidget {
                 width: 26,
                 height: 26,
                 decoration: BoxDecoration(
-                  color: routine.gradientColors.first,
+                  color: accent,
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
@@ -251,13 +276,13 @@ class SkincareDetailSheet extends StatelessWidget {
                       Icon(
                         Icons.star_outline_rounded,
                         size: 15,
-                        color: routine.gradientColors.first,
+                        color: accent,
                       ),
                       const SizedBox(width: 5),
                       Text(
                         'WHY IT HELPS',
                         style: GoogleFonts.poppins(
-                          color: routine.gradientColors.first,
+                          color: accent,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.5,
@@ -279,6 +304,102 @@ class SkincareDetailSheet extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _WeekHeader extends StatelessWidget {
+  const _WeekHeader({
+    required this.week,
+    required this.accent,
+    required this.isCurrent,
+    required this.isPast,
+  });
+
+  final SkincareWeek week;
+  final Color accent;
+  final bool isCurrent;
+  final bool isPast;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isCurrent ? accent : accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isCurrent ? accent : accent.withValues(alpha: 0.2),
+          width: isCurrent ? 1.6 : 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'WEEK ${week.weekNumber}',
+                style: GoogleFonts.poppins(
+                  color: isCurrent ? Colors.white : accent,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (isCurrent)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    'YOU ARE HERE',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                )
+              else if (isPast)
+                Icon(
+                  Icons.check_circle_rounded,
+                  size: 14,
+                  color: accent.withValues(alpha: 0.6),
+                ),
+              const Spacer(),
+              Text(
+                week.cadence,
+                style: GoogleFonts.poppins(
+                  color: isCurrent
+                      ? Colors.white.withValues(alpha: 0.9)
+                      : textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            week.focus,
+            style: GoogleFonts.poppins(
+              color: isCurrent ? Colors.white : textColor,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+            ),
+          ),
         ],
       ),
     );

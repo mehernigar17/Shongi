@@ -85,6 +85,7 @@ class _HealthScreenState extends State<HealthScreen> {
                     PersonalizedplanHealthpage(
                       plans: _viewModel.workoutPlans,
                       recommendedTitle: _viewModel.recommendedPlan?.title,
+                      exercises: _viewModel.allExercises,
                     ),
                     const SizedBox(height: 20),
                     ExerciseLibrary(

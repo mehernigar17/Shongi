@@ -112,47 +112,6 @@ class RecommendedDoctor extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on_outlined,
-                          size: 14,
-                          color: textSecondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          doc.clinic,
-                          style: GoogleFonts.poppins(
-                            color: textSecondary,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: amberBackground,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.star_rounded, size: 14, color: amberAccent),
-                    const SizedBox(width: 3),
-                    Text(
-                      doc.rating.toStringAsFixed(1),
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF9E6B00),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -184,46 +143,29 @@ class RecommendedDoctor extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: greenBackground,
+              // The booking screen picks the real date and time, so the card
+              // deliberately makes no availability claim of its own.
+              Flexible(
+                child: InkWell(
+                  onTap: () => _openProfile(context, doc),
                   borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.access_time_rounded, size: 13, color: greenAccent),
-                    const SizedBox(width: 4),
-                    Text(
-                      doc.time,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                        color: greenAccent,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              InkWell(
-                onTap: () => _openProfile(context, doc),
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Row(
-                    children: [
-                      Text(
-                        "View profile",
-                        style: GoogleFonts.poppins(
-                          color: accentColor,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "What to expect",
+                          style: GoogleFonts.poppins(
+                            color: accentColor,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: accentColor),
-                    ],
+                        const SizedBox(width: 4),
+                        const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: accentColor),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -243,7 +185,7 @@ class RecommendedDoctor extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Recommended Specialists",
+              "Consultation types",
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w700,
                 fontSize: 18,
@@ -251,7 +193,7 @@ class RecommendedDoctor extends StatelessWidget {
               ),
             ),
             Text(
-              "${doctor.length} available",
+              "${doctor.length} to prepare for",
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,

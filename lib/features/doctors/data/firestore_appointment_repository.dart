@@ -70,8 +70,10 @@ class FirestoreAppointmentRepository implements AppointmentRepository {
   Future<BookingResult> bookSlot(
     String doctorId,
     DateTime date,
-    String slotId,
-  ) async {
+    String slotId, {
+    required String consultName,
+    required String consultSpecialty,
+  }) async {
     final slots = await fetchSlots(doctorId, date);
     AppointmentSlot? slot;
     for (final s in slots) {
@@ -92,9 +94,8 @@ class FirestoreAppointmentRepository implements AppointmentRepository {
 
     await _collection().add({
       'doctorId': doctorId,
-      'doctorName': '',
-      'doctorSpecialty': '',
-      'doctorClinic': '',
+      'doctorName': consultName,
+      'doctorSpecialty': consultSpecialty,
       'dateKey': _dateKey(date),
       'date': date.toIso8601String(),
       'slotId': slotId,
@@ -104,7 +105,7 @@ class FirestoreAppointmentRepository implements AppointmentRepository {
 
     return const BookingResult(
       success: true,
-      message: 'Appointment confirmed! Details have been saved to your account.',
+      message: 'Request saved! Details have been added to your account.',
     );
   }
 

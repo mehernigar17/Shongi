@@ -9,24 +9,6 @@ import 'package:shongi/features/doctors/views/widgets/doctor_message_sheet.dart'
 
 typedef DoctorModel = Doctor;
 
-final List<Doctor> sampleDoctors = [
-  const Doctor(
-    id: 'doc1',
-    name: 'Dr. Sarah Mitchell',
-    specialty: 'Gynecologist & PCOS Specialist',
-    clinic: 'City Women\'s Hospital',
-    rating: 4.9,
-    reviewCount: 312,
-    experienceYears: 12,
-    location: 'Nearby',
-    feePerVisit: 85,
-    tags: ['PCOS', 'Hormones', 'Fertility'],
-    about:
-        'Dr. Mitchell specializes in PCOS management and hormonal imbalances. She takes a holistic approach combining lifestyle interventions with evidence-based medicine.',
-    nextSlot: 'Today, 3:00 PM',
-  ),
-];
-
 class ViewProfile extends StatelessWidget {
   final Doctor doctor;
   final ScrollController? scrollController;
@@ -66,19 +48,6 @@ class ViewProfile extends StatelessWidget {
     );
   }
 
-  Widget _buildStars(double rating) {
-    return Row(
-      children: List.generate(5, (i) {
-        if (i < rating.floor()) {
-          return const Icon(Icons.star_rounded, size: 16, color: amberAccent);
-        } else if (i < rating) {
-          return const Icon(Icons.star_half_rounded, size: 16, color: amberAccent);
-        }
-        return const Icon(Icons.star_border_rounded, size: 16, color: Color(0xFFD0D0D0));
-      }),
-    );
-  }
-
   Widget _buildHeader(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,21 +75,6 @@ class ViewProfile extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  _buildStars(doctor.rating),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${doctor.rating.toStringAsFixed(1)} (${doctor.reviewCount})',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: textSecondary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
@@ -140,65 +94,47 @@ class ViewProfile extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cardBorderColor),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 18, color: accentColor),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 10.5,
-                color: textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: textColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _buildBringList() {
+    if (doctor.bring.isEmpty) return const SizedBox.shrink();
 
-  Widget _buildStatsRow() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildStatCard(
-          icon: Icons.access_time_rounded,
-          label: 'Experience',
-          value: '${doctor.experienceYears} yrs',
+        Text(
+          "Worth having ready",
+          style: GoogleFonts.poppins(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+            color: textColor,
+          ),
         ),
-        _buildStatCard(
-          icon: Icons.location_on_outlined,
-          label: 'Location',
-          value: doctor.location,
-        ),
-        _buildStatCard(
-          icon: Icons.payments_outlined,
-          label: 'Fee',
-          value: '\$${doctor.feePerVisit.toStringAsFixed(0)}/visit',
+        const SizedBox(height: 10),
+        ...doctor.bring.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 9),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.check_circle_outline_rounded,
+                  size: 15,
+                  color: greenAccent,
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    item,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      height: 1.4,
+                      color: textSecondary,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -263,7 +199,7 @@ class ViewProfile extends StatelessWidget {
     );
   }
 
-  Widget _buildNextSlot() {
+  Widget _buildRequestNote() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -272,29 +208,21 @@ class ViewProfile extends StatelessWidget {
         border: Border.all(color: greenAccent.withValues(alpha: 0.2)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.access_time_rounded, size: 18, color: greenAccent),
+          const Icon(Icons.info_outline_rounded, size: 18, color: greenAccent),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Next available slot',
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: greenAccent,
-                ),
+          Expanded(
+            child: Text(
+              'Picking a time saves this as a request in your account. '
+              'Confirm the actual appointment with your clinic.',
+              style: GoogleFonts.poppins(
+                fontSize: 11.5,
+                height: 1.45,
+                fontWeight: FontWeight.w500,
+                color: textColor.withValues(alpha: 0.75),
               ),
-              Text(
-                doctor.nextSlot,
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -335,6 +263,7 @@ class ViewProfile extends StatelessWidget {
                   builder: (context) => BookAppointment(
                     doctorId: doctor.id,
                     doctorName: doctor.name,
+                    doctorSpecialty: doctor.specialty,
                     repository: appointmentRepository,
                   ),
                 ),
@@ -393,13 +322,13 @@ class ViewProfile extends StatelessWidget {
           _buildDragHandle(),
           _buildHeader(context),
           const SizedBox(height: 18),
-          _buildStatsRow(),
-          const SizedBox(height: 14),
           _buildTagsRow(),
           const SizedBox(height: 16),
           _buildAbout(),
-          const SizedBox(height: 14),
-          _buildNextSlot(),
+          const SizedBox(height: 18),
+          _buildBringList(),
+          const SizedBox(height: 18),
+          _buildRequestNote(),
           const SizedBox(height: 20),
           _buildActions(context),
         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../care_plan/care_plan_progress.dart';
 import '../models/skincare_routine.dart';
 import '../repositories/skincare_repository.dart';
 
@@ -11,6 +12,7 @@ class SkincareViewModel extends ChangeNotifier {
 
   List<SkincareRoutine> _routines = [];
   String _activeRoutineId = '';
+  DateTime? _startedAt;
   String _skinType = 'Normal Skin';
   bool _isLoading = false;
 
@@ -27,6 +29,28 @@ class SkincareViewModel extends ChangeNotifier {
     }
   }
 
+  /// How far through the active plan the user is, or `null` when no plan runs.
+  ///
+  /// Derived from the stored start date on every read, so the plan advances by
+  /// itself after each 7 days without needing a refresh or a scheduled job.
+  CarePlanProgress? get activeProgress {
+    final startedAt = _startedAt;
+    final routine = activeRoutine;
+    if (startedAt == null || routine == null) return null;
+    return computeCarePlanProgress(
+      startedAt: startedAt,
+      totalWeeks: routine.totalWeeks,
+    );
+  }
+
+  /// The week the given plan should display: the live week for a running plan,
+  /// or week one as a preview for a plan that has not been started.
+  SkincareWeek? weekFor(SkincareRoutine routine) {
+    if (!routine.isActive) return routine.weekAt(1);
+    final progress = activeProgress;
+    return routine.weekAt(progress?.weekNumber ?? 1);
+  }
+
   Future<void> load() async {
     _isLoading = true;
     notifyListeners();
@@ -34,29 +58,52 @@ class SkincareViewModel extends ChangeNotifier {
       final futures = await Future.wait([
         _repository.loadRoutines(),
         _repository.getPersonalizedSkinType(),
+        _repository.loadActiveRoutineStartedAt(),
       ]);
       _routines = futures[0] as List<SkincareRoutine>;
       _skinType = futures[1] as String;
-      
+      _startedAt = futures[2] as DateTime?;
+
       final active = _routines.where((r) => r.isActive).toList();
-      if (active.isNotEmpty) {
-        _activeRoutineId = active.first.id;
-      }
+      _activeRoutineId = active.isNotEmpty ? active.first.id : '';
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  /// Starts [routineId] as the active plan.
+  ///
+  /// Returns true only when this actually started a new plan. Re-selecting the
+  /// plan that is already running leaves its start date alone — otherwise every
+  /// tap on the card would reset the user back to week one.
   Future<bool> startRoutine(String routineId) async {
+    final wasAlreadyActive = _activeRoutineId == routineId;
+
     _activeRoutineId = routineId;
     _routines = _routines.map((r) {
       return r.copyWith(isActive: r.id == routineId);
     }).toList();
+    if (!wasAlreadyActive) {
+      _startedAt = DateTime.now();
+    }
     notifyListeners();
 
-    await _repository.saveActiveRoutine(routineId);
-    return true;
+    await _repository.saveActiveRoutine(routineId, startedAt: _startedAt);
+    return !wasAlreadyActive;
+  }
+
+  /// Re-anchors the plan clock so [routineId] starts again from week 1, day 1.
+  ///
+  /// Used by the "Restart plan" action on the card of a running plan.
+  Future<void> restartRoutine(String routineId) async {
+    if (_activeRoutineId != routineId) {
+      await startRoutine(routineId);
+      return;
+    }
+    _startedAt = DateTime.now();
+    notifyListeners();
+    await _repository.saveActiveRoutine(routineId, startedAt: _startedAt);
   }
 
   Future<void> deactivateRoutine(String routineId) async {
@@ -66,6 +113,7 @@ class SkincareViewModel extends ChangeNotifier {
     _routines = _routines.map((r) {
       return r.copyWith(isActive: r.id == routineId ? false : r.isActive);
     }).toList();
+    _startedAt = null;
     notifyListeners();
 
     await _repository.saveActiveRoutine('');

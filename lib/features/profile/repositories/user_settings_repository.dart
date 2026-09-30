@@ -16,5 +16,17 @@ abstract class UserSettingsRepository {
     bool? notificationsEnabled,
     bool? privacyEnabled,
   });
-  Future<void> updateActiveRoutine(String kind, String routineId);
+
+  /// Stores which routine of [kind] (`skincare` or `haircare`) is active.
+  ///
+  /// [startedAt] anchors the plan clock that drives weekly progression. Passing
+  /// an empty [routineId] clears both the routine and its start date.
+  Future<void> updateActiveRoutine(
+    String kind,
+    String routineId, {
+    DateTime? startedAt,
+  });
+
+  /// Reads back the start date for the active routine of [kind].
+  Future<DateTime?> loadActiveRoutineStartedAt(String kind);
 }

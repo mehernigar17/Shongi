@@ -4,6 +4,8 @@ import '../features/doctors/data/firestore_appointment_repository.dart';
 import '../features/doctors/repositories/appointment_repository.dart';
 import '../features/haircare/data/firestore_haircare_repository.dart';
 import '../features/haircare/repositories/haircare_repository.dart';
+import '../features/insights/data/firestore_wellness_insight_repository.dart';
+import '../features/insights/repositories/wellness_insight_repository.dart';
 import '../features/logs/data/firestore_log_repository.dart';
 import '../features/logs/repositories/log_repository.dart';
 import '../features/onboarding/data/firestore_profile_repository.dart';
@@ -31,7 +33,8 @@ class AppDependencies {
         dashboardRepository = FirestoreDashboardRepository(),
         statisticsRepository = FirestoreStatisticsRepository(),
         skincareRepository = FirestoreSkincareRepository(),
-        haircareRepository = FirestoreHaircareRepository();
+        haircareRepository = FirestoreHaircareRepository(),
+        wellnessInsightRepository = FirestoreWellnessInsightRepository();
 
   final ProfileRepository profileRepository;
   final UserSettingsRepository userSettingsRepository;
@@ -42,4 +45,5 @@ class AppDependencies {
   final StatisticsRepository statisticsRepository;
   final SkincareRepository skincareRepository;
   final HaircareRepository haircareRepository;
+  final WellnessInsightRepository wellnessInsightRepository;
 }

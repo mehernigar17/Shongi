@@ -37,6 +37,9 @@ class MockExerciseRepository implements ExerciseRepository {
     ),
   ];
 
+  /// Every `youtubeId` below was checked live against the YouTube oEmbed
+  /// endpoint (and `playableInEmbed`) — a dead or private ID renders as a black
+  /// box with no error, so re-verify before adding or changing one here.
   static const List<Exercise> _mockExercises = [
     Exercise(
       id: "e1",
@@ -58,7 +61,7 @@ class MockExerciseRepository implements ExerciseRepository {
       duration: "30 min",
       calories: "120 cal",
       icon: Icons.nature_people_rounded,
-      youtubeId: "ZXt3GTLQU3g",
+      youtubeId: "U8-utb1SS7s",
       about: "A relaxed walk outdoors that combines gentle cardio with the grounding, cortisol-lowering benefits of being in nature.",
       benefits: ["Reduces cortisol & stress", "Improves stamina", "Boosts natural Vitamin D"],
     ),
@@ -70,7 +73,7 @@ class MockExerciseRepository implements ExerciseRepository {
       duration: "15 min",
       calories: "80 cal",
       icon: Icons.self_improvement_rounded,
-      youtubeId: "6BMTeOOCqHo",
+      youtubeId: "ZP34IA0d8LI",
       about: "A graceful sequence of 12 linked yoga postures performed with deep breathing to energize the spine and stimulate hormonal balance.",
       benefits: ["Enhances body flexibility", "Stimulates thyroid & metabolism", "Calms the nervous system"],
     ),
@@ -82,7 +85,7 @@ class MockExerciseRepository implements ExerciseRepository {
       duration: "30 min",
       calories: "60 cal",
       icon: Icons.spa_rounded,
-      youtubeId: "EYsRfDvKKZ4",
+      youtubeId: "r8yRObuBJe8",
       about: "A slow-paced, deeply relaxing style of yoga where gentle poses are held for several minutes to release fascial tension.",
       benefits: ["Increases pelvic mobility", "Reduces anxiety & fatigue", "Promotes restful sleep"],
     ),
@@ -106,7 +109,7 @@ class MockExerciseRepository implements ExerciseRepository {
       duration: "20 min",
       calories: "90 cal",
       icon: Icons.sports_gymnastics_rounded,
-      youtubeId: "K56Z92mhioM",
+      youtubeId: "o5UOhaAYqBk",
       about: "Targeted Pilates mat session focusing on deep core activation, pelvic floor strength, and lower back stability.",
       benefits: ["Strengthens deep abdominal wall", "Improves posture", "Relieves lower back ache"],
     ),
@@ -118,7 +121,7 @@ class MockExerciseRepository implements ExerciseRepository {
       duration: "30 min",
       calories: "130 cal",
       icon: Icons.fitness_center_rounded,
-      youtubeId: "lLEodWaUATk",
+      youtubeId: "nTVu54rl6J4",
       about: "Full-body tone workout using progressive elastic resistance to sculpt muscle and enhance insulin sensitivity without joint impact.",
       benefits: ["Builds functional muscle tone", "Enhances joint integrity", "Low-impact on hormones"],
     ),
@@ -154,7 +157,7 @@ class MockExerciseRepository implements ExerciseRepository {
       duration: "15 min",
       calories: "50 cal",
       icon: Icons.accessibility_rounded,
-      youtubeId: "R5qLnnNCN8w",
+      youtubeId: "aM_pGHLJGXU",
       about: "Focused hip openers and gentle spinal twists to relieve tension around the pelvis, hips, and lower back.",
       benefits: ["Eases pelvic discomfort", "Improves mobility", "Reduces lumbar stiffness"],
     ),

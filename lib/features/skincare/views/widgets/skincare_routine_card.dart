@@ -1,18 +1,91 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/core/theme/app_colors.dart';
+import '../../../care_plan/care_plan_progress.dart';
+import '../../../care_plan/views/widgets/care_plan_week_banner.dart';
 import '../../models/skincare_routine.dart';
 import 'skincare_detail_sheet.dart';
 
 class SkincareRoutineCard extends StatelessWidget {
-  final SkincareRoutine routine;
-  final VoidCallback onStartRoutine;
-
   const SkincareRoutineCard({
     super.key,
     required this.routine,
     required this.onStartRoutine,
+    this.onRestartRoutine,
+    this.progress,
+    this.week,
   });
+
+  final SkincareRoutine routine;
+  final VoidCallback onStartRoutine;
+
+  /// Called when the user confirms a restart of the running plan. Falls back to
+  /// [onStartRoutine] when the host does not supply one.
+  final VoidCallback? onRestartRoutine;
+
+  /// Live progress for the running plan; `null` while nothing is active.
+  final CarePlanProgress? progress;
+
+  /// The week to display — the live week when active, week 1 as a preview
+  /// otherwise.
+  final SkincareWeek? week;
+
+  /// Steps for the week on display.
+  List<SkincareStep> get _visibleSteps =>
+      week?.steps ?? routine.previewSteps;
+
+  /// Restarting resets the plan clock, so it asks first.
+  Future<void> _confirmRestart(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          'Restart this plan?',
+          style: GoogleFonts.poppins(
+            color: textColor,
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          'Your ${routine.planLengthLabel} will start again from week 1, day 1.',
+          style: GoogleFonts.poppins(
+            color: textSecondary,
+            fontSize: 13.5,
+            height: 1.4,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(
+                color: textSecondary,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              'Restart',
+              style: GoogleFonts.poppins(
+                color: accentColor,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      (onRestartRoutine ?? onStartRoutine)();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +174,7 @@ class SkincareRoutineCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            routine.duration,
+                            routine.planLengthLabel,
                             style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontSize: 11.5,
@@ -168,8 +241,17 @@ class SkincareRoutineCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                CarePlanWeekBanner(
+                  progress: progress,
+                  focus: week?.focus ?? '',
+                  cadence: week?.cadence ?? '',
+                  accent: routine.gradientColors.first,
+                ),
+                const SizedBox(height: 18),
                 Text(
-                  'STEPS',
+                  routine.isActive
+                      ? 'THIS WEEK · ${_visibleSteps.length} STEPS'
+                      : 'WEEK 1 OF ${routine.totalWeeks} · ${_visibleSteps.length} STEPS',
                   style: GoogleFonts.poppins(
                     color: textSecondary,
                     fontSize: 11.5,
@@ -178,7 +260,7 @@ class SkincareRoutineCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                ...routine.steps.map((step) {
+                ..._visibleSteps.map((step) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Row(
@@ -226,7 +308,11 @@ class SkincareRoutineCard extends StatelessWidget {
                         height: 42,
                         child: TextButton.icon(
                           onPressed: () {
-                            SkincareDetailSheet.show(context, routine);
+                            SkincareDetailSheet.show(
+                              context,
+                              routine,
+                              currentWeekNumber: progress?.weekNumber,
+                            );
                           },
                           icon: const Icon(
                             Icons.info_outline_rounded,
@@ -252,20 +338,20 @@ class SkincareRoutineCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
 
-                    // Start Routine / Active button
+                    // Start Routine / Restart button
                     Expanded(
                       child: SizedBox(
                         height: 42,
                         child: routine.isActive
                             ? OutlinedButton.icon(
-                                onPressed: onStartRoutine,
+                                onPressed: () => _confirmRestart(context),
                                 icon: const Icon(
-                                  Icons.check_circle_outline_rounded,
+                                  Icons.restart_alt_rounded,
                                   size: 17,
                                   color: greenAccent,
                                 ),
                                 label: Text(
-                                  'Active',
+                                  'Restart plan',
                                   style: GoogleFonts.poppins(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,

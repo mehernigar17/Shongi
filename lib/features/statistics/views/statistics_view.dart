@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shongi/app/app_dependencies.dart';
 import 'package:shongi/core/theme/app_colors.dart';
+import 'package:shongi/features/insights/data/firestore_wellness_insight_repository.dart';
+import 'package:shongi/features/insights/viewmodels/wellness_insights_view_model.dart';
+import 'package:shongi/features/insights/views/widgets/smart_insights_card.dart';
 import 'package:shongi/features/statistics/data/firestore_statistics_repository.dart';
+import 'package:shongi/features/statistics/models/mood_summary.dart';
 import 'package:shongi/features/statistics/viewmodels/statistics_view_model.dart';
 import 'package:shongi/features/statistics/views/widgets/mood_distribution_card.dart';
 import 'package:shongi/features/statistics/views/widgets/stats_header.dart';
@@ -23,12 +27,14 @@ class StatisticsScreen extends StatefulWidget {
 
 class StatisticsScreenState extends State<StatisticsScreen> {
   late final StatisticsViewModel _vm;
+  late final WellnessInsightsViewModel _insightsVm;
   bool _ownsViewModel = false;
 
   /// Re-fetches the currently selected range so the screen shows fresh
   /// data after the user logs new entries.
   void reload() {
     _vm.selectRange(_vm.selectedRange);
+    _insightsVm.load();
   }
 
   @override
@@ -43,12 +49,18 @@ class StatisticsScreenState extends State<StatisticsScreen> {
       _vm = StatisticsViewModel(FirestoreStatisticsRepository());
       _ownsViewModel = true;
     }
+    _insightsVm = WellnessInsightsViewModel(
+      widget.dependencies?.wellnessInsightRepository ??
+          FirestoreWellnessInsightRepository(),
+    );
     _vm.selectRange(0);
+    _insightsVm.load();
   }
 
   @override
   void dispose() {
     if (_ownsViewModel) _vm.dispose();
+    _insightsVm.dispose();
     super.dispose();
   }
 
@@ -93,11 +105,9 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                     final cycleAvg = data == null || data.cycleDays.isEmpty
                         ? null
                         : data.cycleDays.reduce((a, b) => a + b) / data.cycleDays.length;
-                    final moodPositive = data == null || data.moods.isEmpty
-                        ? null
-                        : data.moods.where((m) => m == '🙂' || m == '😊' || m == '😄').length /
-                            data.moods.length *
-                            100;
+                    final moodSummary = MoodSummary.fromMoods(
+                      data?.moods ?? const <String>[],
+                    );
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,7 +124,18 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                         StatsSummaryCards(
                           sleepAvg: sleepAvg,
                           cycleAvg: cycleAvg,
-                          moodPositivePercent: moodPositive,
+                          moodPositivePercent: moodSummary.positivePercent,
+                        ),
+                        const SizedBox(height: 10),
+                        ListenableBuilder(
+                          listenable: _insightsVm,
+                          builder: (context, _) {
+                            return SmartInsightsCard(
+                              insights: _insightsVm.insights,
+                              isLoading: _insightsVm.isLoading,
+                              hasLoaded: _insightsVm.hasLoaded,
+                            );
+                          },
                         ),
                         const SizedBox(height: 10),
                         SleepTrendsCard(sleepHours: data?.sleepHours ?? const []),

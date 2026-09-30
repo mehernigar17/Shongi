@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/app/app_dependencies.dart';
 import 'package:shongi/core/theme/app_colors.dart';
 import 'package:shongi/features/auth/services/auth_service.dart';
+import 'package:shongi/features/dev_tools/views/widgets/dev_tools_card.dart';
 import 'package:shongi/features/onboarding/data/firestore_profile_repository.dart';
 import 'package:shongi/features/profile/data/firestore_user_settings_repository.dart';
 import 'package:shongi/features/profile/viewmodels/profile_view_model.dart';
@@ -546,6 +547,12 @@ class ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
                     SubscriptionCard(service: widget.dependencies?.subscriptions ?? SubscriptionService.instance),
+                    // Debug-only: fills the account with demo history so every
+                    // screen can be exercised on a fresh emulator install.
+                    if (devToolsEnabled) ...[
+                      const SizedBox(height: 16),
+                      DevToolsCard(onChanged: _vm.load),
+                    ],
                     const SizedBox(height: 16),
                     SignOutButton(
                       onTap: _showSignOutDialog,

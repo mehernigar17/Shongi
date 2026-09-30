@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:shongi/core/theme/app_colors.dart';
+import 'package:shongi/features/statistics/models/mood_summary.dart';
 
 class MoodDistributionCard extends StatelessWidget {
   /// Mood emojis logged in the selected range.
@@ -8,34 +9,9 @@ class MoodDistributionCard extends StatelessWidget {
 
   const MoodDistributionCard({super.key, this.moods = const []});
 
-  static const _moodOrder = ['😔', '😳', '🙂', '😊', '😄'];
-
-  double? get _positivePercent {
-    if (moods.isEmpty) return null;
-    final positive = moods.where((m) => m == '🙂' || m == '😊' || m == '😄').length;
-    return positive / moods.length * 100;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final counts = <String, int>{};
-    for (final m in moods) {
-      counts[m] = (counts[m] ?? 0) + 1;
-    }
-    final total = moods.length;
-    final positive = _positivePercent;
-
-    final bars = <Widget>[];
-    for (final emoji in _moodOrder) {
-      final count = counts[emoji] ?? 0;
-      final fraction = total == 0 ? 0.0 : count / total;
-      bars.add(_MoodBar(
-        emoji: emoji,
-        value: fraction,
-        percent: total == 0 ? '0%' : '${(fraction * 100).round()}%',
-      ));
-      bars.add(const SizedBox(height: 14));
-    }
+    final summary = MoodSummary.fromMoods(moods);
 
     return Container(
       width: double.infinity,
@@ -48,7 +24,7 @@ class MoodDistributionCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withOpacity(0.04),
+            color: accentColor.withValues(alpha: 0.04),
             blurRadius: 14,
             offset: const Offset(0, 5),
           ),
@@ -69,39 +45,77 @@ class MoodDistributionCard extends StatelessWidget {
           Text(
             "This period",
             style: TextStyle(
-              color: textColor.withOpacity(0.5),
+              color: textColor.withValues(alpha: 0.5),
               fontSize: 10.5,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 18),
-          ...bars,
-          const SizedBox(height: 4),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 13,
-              vertical: 12,
-            ),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F2FC),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              positive == null
-                  ? "💜 Log your mood each day to see your mood distribution."
-                  : positive >= 50
-                      ? "💜 ${positive.round()}% of your logged days were positive. Keep it up!"
-                      : "💜 ${positive.round()}% of your logged days were positive. Self-care can help lift your mood.",
-              style: TextStyle(
-                color: accentColor.withOpacity(0.88),
-                fontSize: 11.5,
-                height: 1.45,
-                fontWeight: FontWeight.w500,
+          if (summary.isEmpty)
+            const _NoMoodPlaceholder()
+          else ...[
+            for (final emoji in summary.loggedMoods) ...[
+              _MoodBar(
+                emoji: emoji,
+                value: summary.shareOf(emoji),
+                percent: '${(summary.shareOf(emoji) * 100).round()}%',
+              ),
+              const SizedBox(height: 14),
+            ],
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 13,
+                vertical: 12,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F2FC),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                _summaryLine(summary),
+                style: TextStyle(
+                  color: accentColor.withValues(alpha: 0.88),
+                  fontSize: 11.5,
+                  height: 1.45,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
+          ],
         ],
+      ),
+    );
+  }
+
+  String _summaryLine(MoodSummary summary) {
+    final percent = summary.positivePercent!;
+    final days = summary.total;
+    return '💜 $percent% of your $days logged ${days == 1 ? "day was" : "days were"} '
+        'positive. ${percent >= 50 ? "Keep it up!" : "Self-care can help lift your mood."}';
+  }
+}
+
+class _NoMoodPlaceholder extends StatelessWidget {
+  const _NoMoodPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F2FC),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        "💜 No mood logged in this period yet. Pick one when you add your next entry.",
+        style: TextStyle(
+          color: accentColor.withValues(alpha: 0.88),
+          fontSize: 11.5,
+          height: 1.45,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
@@ -146,8 +160,8 @@ class _MoodBar extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          accentColor.withOpacity(0.95),
-                          accentColor.withOpacity(0.75),
+                          accentColor.withValues(alpha: 0.95),
+                          accentColor.withValues(alpha: 0.75),
                         ],
                       ),
                     ),
@@ -164,7 +178,7 @@ class _MoodBar extends StatelessWidget {
             percent,
             textAlign: TextAlign.right,
             style: TextStyle(
-              color: textColor.withOpacity(0.58),
+              color: textColor.withValues(alpha: 0.58),
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),

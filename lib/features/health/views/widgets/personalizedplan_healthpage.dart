@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shongi/core/theme/app_colors.dart';
+import 'package:shongi/features/health/models/exercise.dart';
 import 'package:shongi/features/health/models/workout_plan.dart';
+import 'package:shongi/features/health/views/widgets/Exercise_detail_sheet.dart';
 
 class PersonalizedplanHealthpage extends StatelessWidget {
   final List<WorkoutPlan>? plans;
@@ -10,10 +12,16 @@ class PersonalizedplanHealthpage extends StatelessWidget {
   /// carrying this title is badged as the recommendation.
   final String? recommendedTitle;
 
+  /// Exercises available in the library, used to open a plan's items. An item
+  /// with no matching exercise is still listed in the sheet, just without a
+  /// tutorial to open.
+  final List<Exercise>? exercises;
+
   const PersonalizedplanHealthpage({
     super.key,
     this.plans,
     this.recommendedTitle,
+    this.exercises,
   });
 
   static const List<WorkoutPlan> _defaultPlans = [
@@ -104,14 +112,196 @@ class PersonalizedplanHealthpage extends StatelessWidget {
               clipBehavior: Clip.none,
               itemCount: activePlans.length,
               itemBuilder: (context, index) {
+                final plan = activePlans[index];
                 return PlanCard(
-                  plan: activePlans[index],
-                  isRecommended: recommendedTitle == activePlans[index].title,
+                  plan: plan,
+                  isRecommended: recommendedTitle == plan.title,
+                  onTap: () => _openPlan(context, plan),
                 );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Opens the plan's exercises, matching each item to a library exercise by
+  /// title so the tutorial sheet can be opened from here.
+  void _openPlan(BuildContext context, WorkoutPlan plan) {
+    final library = exercises ?? const <Exercise>[];
+    final matches = <String, Exercise>{
+      for (final exercise in library)
+        exercise.title.trim().toLowerCase(): exercise,
+    };
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      builder: (sheetContext) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.35,
+          maxChildSize: 0.9,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: pageBackground,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: cardBorderColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: accentColorLight,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(plan.icon, color: accentColor, size: 22),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              plan.title,
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: textColor,
+                              ),
+                            ),
+                            if (plan.subtitle.isNotEmpty)
+                              Text(
+                                plan.subtitle,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  for (final item in plan.items)
+                    _PlanExerciseTile(
+                      title: item,
+                      exercise: matches[item.trim().toLowerCase()],
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _PlanExerciseTile extends StatelessWidget {
+  final String title;
+  final Exercise? exercise;
+
+  const _PlanExerciseTile({required this.title, this.exercise});
+
+  @override
+  Widget build(BuildContext context) {
+    final match = exercise;
+    final subtitle = match == null
+        ? 'Not in the library yet'
+        : '${match.category} · ${match.duration} · ${match.level}';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          // Only offer a tap target when there is a tutorial to open, so an
+          // unlisted item does not look broken.
+          onTap: match == null
+              ? null
+              : () {
+                  Navigator.of(context).pop();
+                  showExerciseDetailSheet(context, match);
+                },
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: cardBorderColor),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: chipBackground,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    match?.icon ?? Icons.fitness_center,
+                    size: 18,
+                    color: accentColor,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.5,
+                          color: textSecondary,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (match != null)
+                  const Icon(
+                    Icons.play_circle_outline_rounded,
+                    size: 20,
+                    color: accentColor,
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -121,17 +311,21 @@ class PlanCard extends StatelessWidget {
   final WorkoutPlan plan;
   final bool isRecommended;
 
+  /// Called when the card is tapped, so a plan can be acted on rather than
+  /// being a dead summary.
+  final VoidCallback? onTap;
+
   const PlanCard({
     super.key,
     required this.plan,
     this.isRecommended = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 190,
-      padding: const EdgeInsets.all(14),
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         color: isRecommended
@@ -145,9 +339,25 @@ class PlanCard extends StatelessWidget {
           width: isRecommended ? 2 : 1,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: _buildBody(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
           Row(
             children: [
               Container(
@@ -244,7 +454,6 @@ class PlanCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
     );
   }
 }

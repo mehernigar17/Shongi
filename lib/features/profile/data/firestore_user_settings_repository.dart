@@ -76,8 +76,46 @@ class FirestoreUserSettingsRepository implements UserSettingsRepository {
   }
 
   @override
-  Future<void> updateActiveRoutine(String kind, String routineId) async {
-    final field = kind == 'skincare' ? 'activeSkincareRoutine' : 'activeHaircareRoutine';
-    await _update({field: routineId});
+  Future<void> updateActiveRoutine(
+    String kind,
+    String routineId, {
+    DateTime? startedAt,
+  }) async {
+    final idField =
+        kind == 'skincare' ? 'activeSkincareRoutine' : 'activeHaircareRoutine';
+    final startedAtField = kind == 'skincare'
+        ? 'activeSkincareRoutineStartedAt'
+        : 'activeHaircareRoutineStartedAt';
+
+    if (routineId.isEmpty) {
+      // Clearing the plan must clear its clock too, otherwise a later start
+      // would inherit a stale start date.
+      await _update({
+        idField: FieldValue.delete(),
+        startedAtField: FieldValue.delete(),
+      });
+      return;
+    }
+
+    final data = <String, dynamic>{idField: routineId};
+    if (startedAt != null) {
+      data[startedAtField] = startedAt.toIso8601String();
+    }
+    await _update(data);
+  }
+
+  @override
+  Future<DateTime?> loadActiveRoutineStartedAt(String kind) async {
+    final field = kind == 'skincare'
+        ? 'activeSkincareRoutineStartedAt'
+        : 'activeHaircareRoutineStartedAt';
+    final data = await loadSettings();
+    return _parseDate(data[field]);
+  }
+
+  /// Firestore dates in this app are stored as ISO-8601 strings.
+  static DateTime? _parseDate(Object? value) {
+    if (value is! String || value.isEmpty) return null;
+    return DateTime.tryParse(value);
   }
 }

@@ -143,11 +143,19 @@ class _HaircareViewState extends State<HaircareView> {
             ..._viewModel.routines.map((routine) {
               return HaircareRoutineCard(
                 routine: routine,
+                progress: _viewModel.activeProgress,
+                week: _viewModel.weekFor(routine),
                 onStartRoutine: () async {
-                  await _viewModel.startRoutine(routine.id);
-                  if (context.mounted) {
+                  final newlyStarted = await _viewModel.startRoutine(routine.id);
+                  if (!context.mounted) return;
+                  // Only celebrate a genuinely new plan. Re-selecting the
+                  // running one must not re-fire the activation dialog.
+                  if (newlyStarted) {
                     HaircareReminderDialog.show(context, routine);
                   }
+                },
+                onRestartRoutine: () {
+                  _viewModel.restartRoutine(routine.id);
                 },
               );
             }),
