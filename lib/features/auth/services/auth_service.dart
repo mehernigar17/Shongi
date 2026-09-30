@@ -21,6 +21,40 @@ class AuthService {
     );
   }
 
+  /// Turns a Firebase Auth failure into a message a user can act on.
+  ///
+  /// Note: there is deliberately no pre-flight "does this email exist?" call.
+  /// Firebase removed `fetchSignInMethodsForEmail` in v6 to stop account
+  /// enumeration, so availability is learned from register() itself via the
+  /// `email-already-in-use` code — authoritative and immediate.
+  static String messageFor(Object error) {
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
+        case 'email-already-in-use':
+          return 'An account already exists with this email. Try signing in.';
+        case 'invalid-email':
+          return 'That email address does not look valid.';
+        case 'weak-password':
+          return 'Password is too weak. Use at least 6 characters.';
+        case 'user-not-found':
+        case 'wrong-password':
+        case 'invalid-credential':
+          return 'Incorrect email or password.';
+        case 'user-disabled':
+          return 'This account has been disabled. Contact support.';
+        case 'too-many-requests':
+          return 'Too many attempts. Please wait a moment and try again.';
+        case 'network-request-failed':
+          return 'Network error. Check your connection and try again.';
+        case 'operation-not-allowed':
+          return 'This sign-in method is disabled. Contact support.';
+        default:
+          return 'Something went wrong. Please try again.';
+      }
+    }
+    return 'Something went wrong. Please try again.';
+  }
+
   // ─────────────────────── LOGIN ───────────────────────
   Future<UserCredential> login({
     required String email,

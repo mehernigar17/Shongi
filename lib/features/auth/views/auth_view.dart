@@ -110,33 +110,91 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  // ─────────────────────── FRIENDLY ERROR MESSAGES ───────────────────────
-  String _friendlyError(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'user-not-found':
-      case 'invalid-credential':
-        return 'No account found with this email.';
-      case 'wrong-password':
-        return 'Incorrect password.';
-      case 'email-already-in-use':
-        return 'This email is already registered. Try logging in.';
-      case 'weak-password':
-        return 'Password is too weak. Use at least 6 characters.';
-      case 'invalid-email':
-        return 'Invalid email address.';
-      case 'too-many-requests':
-        return 'Too many attempts. Please try again later.';
-      case 'network-request-failed':
-      case 'network_error':
-        return 'No internet connection. Check your network.';
-      default:
-        return 'Something went wrong. Please try again.';
+  // ─────────────────────── FORGOT PASSWORD ───────────────────────
+  /// Sends a Firebase password-reset email for the address in the field.
+  Future<void> _sendResetEmail(String email) async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      await _authService.sendPasswordResetEmail(email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Password reset link sent to $email'),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      _showError(_friendlyError(e));
+    } catch (_) {
+      _showError('Could not send the reset email. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  Future<void> _openForgotPassword() async {
+    final controller = TextEditingController(text: _emailController.text.trim());
+    final email = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Reset password'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.emailAddress,
+          autocorrect: false,
+          decoration: const InputDecoration(
+            labelText: 'Email address',
+            prefixIcon: Icon(Icons.mail_outline_rounded),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              final error = _emailValidator(value);
+              if (error != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(error)),
+                );
+                return;
+              }
+              Navigator.pop(context, value);
+            },
+            child: const Text('Send link'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (email != null) await _sendResetEmail(email);
+  }
+
+  /// Shared email rule: valid shape, single @, no leading/trailing dot.
+  String? _emailValidator(String? value) {
+    final email = (value ?? '').trim();
+    if (email.isEmpty) return 'Enter your email address';
+    final valid = RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$')
+        .hasMatch(email);
+    if (!valid) return 'Enter a valid email address';
+    return null;
+  }
+
+  // ─────────────────────── FRIENDLY ERROR MESSAGES ───────────────────────
+  String _friendlyError(FirebaseAuthException e) => AuthService.messageFor(e);
+
   void _showError(String message) {
     if (!mounted) return;
-    final isDuplicate = message.contains('already registered');
+    final isDuplicate = message.toLowerCase().contains('already');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -332,17 +390,26 @@ class _AuthScreenState extends State<AuthScreen> {
                               'Email address',
                               Icons.mail_outline_rounded,
                             ),
-                            validator: (value) =>
-                                RegExp(
-                                  r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
-                                ).hasMatch(value?.trim() ?? '')
-                                ? null
-                                : 'Enter a valid email address',
+                            validator: _emailValidator,
                           ),
                           const SizedBox(height: 16),
 
                           // ─── Password ───
                           _passwordField(),
+
+                          // ─── Forgot password (login only) ───
+                          if (!register)
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: _isLoading
+                                    ? null
+                                    : _openForgotPassword,
+                                child: const Text('Forgot password?'),
+                              ),
+                            )
+                          else
+                            const SizedBox(height: 8),
 
                           // ─── Confirm password (register only) ───
                           if (register) ...[

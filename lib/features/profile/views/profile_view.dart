@@ -10,6 +10,7 @@ import 'package:shongi/features/profile/data/firestore_user_settings_repository.
 import 'package:shongi/features/profile/viewmodels/profile_view_model.dart';
 import 'package:shongi/features/profile/views/widgets/profile_head.dart';
 import 'package:shongi/features/profile/views/widgets/profile_stats.dart';
+import 'package:shongi/features/profile/views/widgets/profile_stat_sheets.dart';
 import 'package:shongi/features/profile/views/widgets/profile_cycle.dart';
 import 'package:shongi/features/profile/views/widgets/profile_goal.dart';
 import 'package:shongi/features/profile/views/widgets/profile_prefenrences.dart';
@@ -469,9 +470,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                       streak: _vm.streakLabel,
                       logs: _vm.totalLogsLabel,
                       level: _vm.userLevel,
-                      onStreakTap: () => _showSnackBar('Streak details coming soon!'),
-                      onLogsTap: () => _showSnackBar('Log history coming soon!'),
-                      onLevelTap: () => _showSnackBar('Level details coming soon!'),
+                      onStreakTap: () => showStreakSheet(context, _vm),
+                      onLogsTap: () => showLogHistorySheet(context, _vm),
+                      onLevelTap: () => showLevelSheet(context, _vm),
                     ),
                     const SizedBox(height: 16),
                     CycleProfileCard(
@@ -498,6 +499,16 @@ class ProfileScreenState extends State<ProfileScreen> {
                       dailyReminders: _vm.dailyReminders,
                       notificationsEnabled: _vm.notificationsEnabled,
                       privacyEnabled: _vm.privacyEnabled,
+                      selfCareDay: _vm.selfCareDayLabel,
+                      onSelfCareDayChanged: (day) async {
+                        final ok = await _vm.setSelfCareDay(day);
+                        _showSnackBar(
+                          ok
+                              ? 'Reminder set for every $day at 8:00 PM'
+                              : 'Could not save reminder day',
+                          error: !ok,
+                        );
+                      },
                       onDailyRemindersChanged: (v) async {
                         final ok = await _vm.setDailyReminders(v);
                         _showSnackBar(

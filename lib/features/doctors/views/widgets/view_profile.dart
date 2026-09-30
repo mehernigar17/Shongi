@@ -5,6 +5,7 @@ import 'package:shongi/core/theme/app_colors.dart';
 import 'package:shongi/features/doctors/models/doctor.dart';
 import 'package:shongi/features/doctors/repositories/appointment_repository.dart';
 import 'package:shongi/features/doctors/views/widgets/BookingPage.dart';
+import 'package:shongi/features/doctors/views/widgets/doctor_message_sheet.dart';
 
 typedef DoctorModel = Doctor;
 
@@ -305,14 +306,7 @@ class ViewProfile extends StatelessWidget {
       children: [
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Chat with ${doctor.name} coming soon!'),
-                  backgroundColor: accentColor,
-                ),
-              );
-            },
+            onPressed: () => showDoctorMessageSheet(context, doctor),
             icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16, color: accentColor),
             label: Text(
               'Message',

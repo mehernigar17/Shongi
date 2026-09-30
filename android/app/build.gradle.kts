@@ -15,6 +15,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Required by flutter_local_notifications so scheduled notifications
+        // work on Android API levels below 26.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -26,6 +29,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Desugared java.time APIs are used by the notification scheduler.
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -45,4 +50,8 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

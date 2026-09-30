@@ -85,44 +85,39 @@ class CycleProfileCard extends StatelessWidget {
             value: pcosDiagnosis,
           ),
           const SizedBox(height: 16),
-          InkWell(
-            borderRadius: BorderRadius.circular(14),
-            onTap: onEdit ??
-                () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Edit Cycle Details coming soon!'),
-                      backgroundColor: accentColor,
-                    ),
-                  );
-                },
-            child: Container(
-              width: double.infinity,
-              height: 46,
-              decoration: BoxDecoration(
-                color: chipBackground,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: cardBorderColor),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.edit_outlined,
-                    size: 17,
-                    color: accentColor,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    "Edit Cycle Details",
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+          // Only rendered when an edit handler was supplied, so the button can
+          // never be a dead tap.
+          if (onEdit != null)
+            InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: onEdit,
+              child: Container(
+                width: double.infinity,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: chipBackground,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: cardBorderColor),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.edit_outlined,
+                      size: 17,
                       color: accentColor,
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Edit Cycle Details",
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: accentColor,
+                      ),
+                    ),
+                  ],
+                ),
             ),
           ),
         ],

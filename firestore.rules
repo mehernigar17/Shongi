@@ -2,7 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Users can read and write only their own profile document
-    // and all of its subcollections (logs, periods, appointments).
+    // and all of its subcollections (logs, periods, appointments, messages).
+    // The recursive `**` wildcard covers every current and future
+    // subcollection, so this stays correct as the app adds collections.
     // This is what makes the onboarding flag persist across logins
     // and keeps every user's data scoped to their own account.
     match /users/{userId}/{document=**} {

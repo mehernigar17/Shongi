@@ -5,6 +5,7 @@ import 'package:shongi/core/theme/app_colors.dart';
 import '../../logs/data/firestore_log_repository.dart';
 import '../../logs/models/daily_log.dart';
 import '../../logs/repositories/log_repository.dart';
+import '../../notifications/services/notification_service.dart';
 import '../../onboarding/models/user_profile.dart';
 import '../../onboarding/repositories/profile_repository.dart';
 import '../repositories/user_settings_repository.dart';
@@ -82,11 +83,65 @@ class ProfileViewModel extends ChangeNotifier {
   String get totalLogsLabel => '$totalLogs';
   String get userLevel => _levelFor(totalLogs);
 
+  /// Logs newest-first, for the profile's history sheet.
+  List<DailyLog> get logs {
+    final sorted = [..._logs]
+      ..sort((a, b) => b.date.compareTo(a.date));
+    return List.unmodifiable(sorted);
+  }
+
+  /// Set of logged calendar days, used to paint the streak heatmap.
+  Set<DateTime> get loggedDays => _logs
+      .map((l) => DateTime(l.date.year, l.date.month, l.date.day))
+      .toSet();
+
+  // Level ladder: [label, minimum logs required]
+  static const _levels = [
+    ['New', 0],
+    ['Bronze', 1],
+    ['Silver', 10],
+    ['Gold', 30],
+    ['Platinum', 60],
+  ];
+
+  /// Logs still needed for the next level (0 once Platinum is reached).
+  int get logsToNextLevel {
+    final next = _levels.firstWhere(
+      (entry) => (entry[1] as int) > totalLogs,
+      orElse: () => ['', totalLogs],
+    );
+    return ((next[1] as int) - totalLogs).clamp(0, 1 << 31);
+  }
+
+  /// Progress through the current level band, 0.0–1.0, for the level sheet.
+  double get levelProgress {
+    var index = _levels.lastIndexWhere((e) => totalLogs >= (e[1] as int));
+    if (index < 0) index = 0;
+    if (index >= _levels.length - 1) return 1.0;
+    final floor = _levels[index][1] as int;
+    final ceiling = _levels[index + 1][1] as int;
+    if (ceiling == floor) return 1.0;
+    return ((totalLogs - floor) / (ceiling - floor)).clamp(0.0, 1.0);
+  }
+
+  /// The label of the level the user is working toward, if any.
+  String? get nextLevelLabel {
+    final next = _levels.firstWhere(
+      (entry) => (entry[1] as int) > totalLogs,
+      orElse: () => ['', -1],
+    );
+    return (next[1] as int) < 0 ? null : next[0] as String;
+  }
+
   List<AchievementStatus> get achievements => _buildAchievements();
 
   bool get dailyReminders => _dailyReminders;
   bool get notificationsEnabled => _notificationsEnabled;
   bool get privacyEnabled => _privacyEnabled;
+
+  /// Weekday the weekly log reminder fires on (from onboarding's self-care day).
+  String get selfCareDay => _profile?.selfCareDay ?? 'Sunday';
+  String get selfCareDayLabel => NotificationService.labelFor(selfCareDay);
 
   Future<void> load() async {
     _isLoading = true;
@@ -130,6 +185,9 @@ class ProfileViewModel extends ChangeNotifier {
       _memberSince = _toDateTime(settings['createdAt']);
       _activeSkincareRoutine = settings['activeSkincareRoutine'] as String? ?? '';
       _activeHaircareRoutine = settings['activeHaircareRoutine'] as String? ?? '';
+
+      // Keep the device's scheduled reminder in step with what is stored.
+      await _syncNotifications();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -250,9 +308,51 @@ class ProfileViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       await _settingsRepository.updatePreferences(dailyReminders: value);
+      await _syncNotifications();
       return true;
     } catch (_) {
       return false;
+    }
+  }
+
+  /// Changes the weekday the weekly log reminder fires on and persists it.
+  Future<bool> setSelfCareDay(String day) async {
+    final current = _profile;
+    if (current == null) return false;
+    final updated = UserProfile(
+      name: current.name,
+      age: current.age,
+      weightKg: current.weightKg,
+      heightCm: current.heightCm,
+      skinType: current.skinType,
+      cycleType: current.cycleType,
+      selfCareDay: day,
+      medications: current.medications,
+      lastPeriodStart: current.lastPeriodStart,
+      lastPeriodEnd: current.lastPeriodEnd,
+    );
+    try {
+      await _repository.save(updated);
+      _profile = updated;
+      notifyListeners();
+      await _syncNotifications();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Applies the stored reminder preference to the local notification
+  /// scheduler. Never throws: notification failures must not break settings.
+  Future<void> _syncNotifications() async {
+    try {
+      if (_dailyReminders && _profile != null) {
+        await NotificationService.instance.scheduleWeeklyLogReminder(selfCareDay);
+      } else {
+        await NotificationService.instance.cancelAll();
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('Reminder sync failed: $e');
     }
   }
 

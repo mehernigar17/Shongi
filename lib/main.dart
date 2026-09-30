@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'app/app.dart';
 import 'app/app_dependencies.dart';
 import 'firebase_options.dart';
+import 'features/notifications/services/notification_service.dart';
 import 'features/subscriptions/subscription_service.dart';
 
 Future<void> main() async {
@@ -17,6 +20,10 @@ Future<void> main() async {
     return;
   }
   SubscriptionService.instance.start();
+  // Local reminders: initialize the plugin and request permission. The
+  // actual weekly schedule is applied once the user's chosen log day is
+  // read from Firestore (see NotificationService.scheduleWeeklyLogReminder).
+  unawaited(NotificationService.instance.initialize());
   runApp(ShongiApp(dependencies: AppDependencies()));
 }
 

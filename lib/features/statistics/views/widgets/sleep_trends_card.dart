@@ -14,9 +14,31 @@ class SleepTrendsCard extends StatelessWidget {
     return sleepHours.reduce((a, b) => a + b) / sleepHours.length;
   }
 
+  /// Chart bounds derived from the real data.
+  ///
+  /// A hardcoded 4–10 window silently hid any night outside that range, so
+  /// the bounds are padded around the observed minimum and maximum instead.
+  ({double minY, double maxY, double interval}) _yScale() {
+    if (sleepHours.isEmpty) return (minY: 4, maxY: 10, interval: 2);
+    var lo = sleepHours.reduce((a, b) => a < b ? a : b);
+    var hi = sleepHours.reduce((a, b) => a > b ? a : b);
+    // Keep a sane band even when every night is identical.
+    if (hi - lo < 1) {
+      lo -= 1;
+      hi += 1;
+    }
+    final minY = (lo - 0.5).floorToDouble().clamp(0, 24).toDouble();
+    final maxY = (hi + 0.5).ceilToDouble().clamp(minY + 1, 24).toDouble();
+    final span = maxY - minY;
+    // Aim for roughly 4 gridlines regardless of the range.
+    final interval = (span / 4).ceilToDouble().clamp(0.5, 6).toDouble();
+    return (minY: minY, maxY: maxY, interval: interval);
+  }
+
   @override
   Widget build(BuildContext context) {
     final avg = _avg;
+    final scale = _yScale();
     final spots = <FlSpot>[
       for (var i = 0; i < sleepHours.length; i++) FlSpot(i.toDouble(), sleepHours[i]),
     ];
@@ -104,11 +126,14 @@ class SleepTrendsCard extends StatelessWidget {
               height: 155,
               child: LineChart(
                 LineChartData(
-                  minY: 4,
-                  maxY: 10,
+                  // A single data point still needs a valid x-axis span.
+                  minX: 0,
+                  maxX: spots.length > 1 ? (spots.length - 1).toDouble() : 1,
+                  minY: scale.minY,
+                  maxY: scale.maxY,
                   gridData: FlGridData(
                     drawVerticalLine: false,
-                    horizontalInterval: 2,
+                    horizontalInterval: scale.interval,
                     getDrawingHorizontalLine: (value) {
                       return FlLine(
                         color: const Color(0xFFE9DEF8),
@@ -129,12 +154,12 @@ class SleepTrendsCard extends StatelessWidget {
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 18,
-                        interval: 2,
+                        interval: scale.interval,
                         getTitlesWidget: (value, meta) {
                           return Text(
                             value.toInt().toString(),
                             style: TextStyle(
-                              color: textColor.withOpacity(0.42),
+                              color: textColor.withValues(alpha: 0.42),
                               fontSize: 9,
                               fontWeight: FontWeight.w500,
                             ),
@@ -145,13 +170,14 @@ class SleepTrendsCard extends StatelessWidget {
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: spots.length <= 7,
+                        interval: 1,
                         getTitlesWidget: (value, meta) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               'Day ${value.toInt() + 1}',
                               style: TextStyle(
-                                color: textColor.withOpacity(0.45),
+                                color: textColor.withValues(alpha: 0.45),
                                 fontSize: 9,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -164,7 +190,9 @@ class SleepTrendsCard extends StatelessWidget {
                   lineBarsData: [
                     LineChartBarData(
                       spots: spots,
-                      isCurved: true,
+                      // Curving a lone point produces a flat, meaningless
+                      // line, so it is only smoothed with 2+ points.
+                      isCurved: spots.length > 2,
                       gradient: const LinearGradient(
                         colors: [
                           Color(0xFFB388FF),

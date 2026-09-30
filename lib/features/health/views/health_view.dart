@@ -7,6 +7,7 @@ import 'package:shongi/features/health/viewmodels/health_view_model.dart';
 import 'package:shongi/features/health/views/widgets/header_tagchips_healthPage.dart';
 import 'package:shongi/features/health/views/widgets/personalizedplan_healthpage.dart';
 import 'package:shongi/features/health/views/widgets/exerciseLibrary_healthPage.dart';
+import 'package:shongi/features/health/views/widgets/cycle_phase_banner.dart';
 
 import 'package:shongi/features/haircare/views/haircare_view.dart';
 import 'package:shongi/features/skincare/views/skincare_view.dart';
@@ -31,7 +32,10 @@ class _HealthScreenState extends State<HealthScreen> {
     if (widget.viewModel != null) {
       _viewModel = widget.viewModel!;
     } else {
-      _viewModel = HealthViewModel(MockExerciseRepository());
+      _viewModel = HealthViewModel(
+        MockExerciseRepository(),
+        periodRepository: widget.dependencies?.periodRepository,
+      );
       _ownsViewModel = true;
     }
   }
@@ -72,8 +76,15 @@ class _HealthScreenState extends State<HealthScreen> {
                   else if (_viewModel.hubTag == "Doctor")
                     DoctorsView(dependencies: widget.dependencies)
                   else ...[
+                    CyclePhaseBanner(
+                      phaseLabel: _viewModel.cyclePhaseLabel,
+                      guidance: _viewModel.cyclePhaseGuidance,
+                      cycleDay: _viewModel.cycleDay,
+                    ),
+                    const SizedBox(height: 14),
                     PersonalizedplanHealthpage(
                       plans: _viewModel.workoutPlans,
+                      recommendedTitle: _viewModel.recommendedPlan?.title,
                     ),
                     const SizedBox(height: 20),
                     ExerciseLibrary(

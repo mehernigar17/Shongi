@@ -20,9 +20,31 @@ class CyclePatternsCard extends StatelessWidget {
     return cycleDays.every((d) => (d - avg).abs() <= 5);
   }
 
+  /// Chart bounds derived from the real cycle lengths.
+  ///
+  /// The previous fixed 20–40 window clipped any cycle outside that range
+  /// (a 21-day or a 45-day cycle simply vanished), so the axis now pads
+  /// around the observed values.
+  ({double minY, double maxY, double interval}) _yScale() {
+    if (cycleDays.isEmpty) return (minY: 20, maxY: 40, interval: 5);
+    var lo = cycleDays.reduce((a, b) => a < b ? a : b);
+    var hi = cycleDays.reduce((a, b) => a > b ? a : b);
+    if (hi - lo < 4) {
+      lo -= 2;
+      hi += 2;
+    }
+    final minY = (lo - 2).floorToDouble().clamp(1, 60).toDouble();
+    final maxY = (hi + 2).ceilToDouble().clamp(minY + 4, 90).toDouble();
+    final span = maxY - minY;
+    // Aim for roughly 4 gridlines regardless of the range.
+    final interval = (span / 4).ceilToDouble().clamp(1, 10).toDouble();
+    return (minY: minY, maxY: maxY, interval: interval);
+  }
+
   @override
   Widget build(BuildContext context) {
     final avg = _avg;
+    final scale = _yScale();
     final bars = <BarChartGroupData>[
       for (var i = 0; i < cycleDays.length; i++)
         _bar(i, cycleDays[i], _barColor(i)),
@@ -105,12 +127,12 @@ class CyclePatternsCard extends StatelessWidget {
               height: 150,
               child: BarChart(
                 BarChartData(
-                  maxY: 40,
-                  minY: 20,
+                  maxY: scale.maxY,
+                  minY: scale.minY,
                   alignment: BarChartAlignment.spaceAround,
                   gridData: FlGridData(
                     drawVerticalLine: false,
-                    horizontalInterval: 5,
+                    horizontalInterval: scale.interval,
                     getDrawingHorizontalLine: (value) {
                       return FlLine(
                         color: const Color(0xFFE9DEF8),
@@ -131,7 +153,7 @@ class CyclePatternsCard extends StatelessWidget {
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 24,
-                        interval: 5,
+                        interval: scale.interval,
                         getTitlesWidget: (value, meta) {
                           return Text(
                             value.toInt().toString(),

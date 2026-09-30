@@ -5,6 +5,7 @@ import 'package:shongi/features/onboarding/models/user_profile.dart';
 import 'package:shongi/app/app_shell_view.dart';
 import 'package:shongi/app/app_dependencies.dart';
 import 'package:shongi/features/auth/services/auth_service.dart';
+import 'package:shongi/features/notifications/services/notification_service.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({
@@ -94,6 +95,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     try {
       // Persist the full profile + onboardingCompleted flag in Firestore.
       await widget.dependencies.profileRepository.save(_collectProfile());
+      // Turn the chosen self-care day into a real weekly phone reminder.
+      await NotificationService.instance.scheduleWeeklyLogReminder(
+        userData.selfCareDay,
+      );
     } catch (e) {
       // Never trap the user here: proceed to the dashboard, but warn them
       // so they know the profile wasn't saved (e.g. Firestore rules).
@@ -445,7 +450,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
           Row(
             children: [
-              buildSectionTitle("Choose Your Self-Care Day"),
+              buildSectionTitle("Choose Your Log Day"),
               const SizedBox(width: 6),
               GestureDetector(
                 onTap: () {
@@ -466,7 +471,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "What is a Self-Care Day?",
+                              "What is your log day?",
                               style: GoogleFonts.poppins(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
@@ -475,10 +480,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ),
                             const SizedBox(height: 14),
                             Text(
-                              "Your self-care day is a dedicated day each week "
-                              "where we’ll encourage you to focus on wellness, "
-                              "rest, emotional health, skincare, exercise, and "
-                              "healthy routines ",
+                              "Pick the weekday that suits you best. We'll send a "
+                              "gentle reminder at 8:00 PM on that day so you can log "
+                              "sleep, mood and symptoms — and use it as a dedicated "
+                              "moment for rest, skincare, exercise and healthy routines.",
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
                                 height: 1.7,
@@ -590,7 +595,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
           buildResultCard(title: "Cycle Status", value: userData.cycleType),
 
-          buildResultCard(title: "Self-Care Day", value: userData.selfCareDay),
+          buildResultCard(title: "Log Day", value: userData.selfCareDay),
 
           SizedBox(height: 5),
 

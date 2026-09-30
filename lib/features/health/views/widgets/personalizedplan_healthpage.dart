@@ -6,7 +6,15 @@ import 'package:shongi/features/health/models/workout_plan.dart';
 class PersonalizedplanHealthpage extends StatelessWidget {
   final List<WorkoutPlan>? plans;
 
-  const PersonalizedplanHealthpage({super.key, this.plans});
+  /// Title of the plan matched to the user's current cycle phase. The card
+  /// carrying this title is badged as the recommendation.
+  final String? recommendedTitle;
+
+  const PersonalizedplanHealthpage({
+    super.key,
+    this.plans,
+    this.recommendedTitle,
+  });
 
   static const List<WorkoutPlan> _defaultPlans = [
     WorkoutPlan(
@@ -96,7 +104,10 @@ class PersonalizedplanHealthpage extends StatelessWidget {
               clipBehavior: Clip.none,
               itemCount: activePlans.length,
               itemBuilder: (context, index) {
-                return PlanCard(plan: activePlans[index]);
+                return PlanCard(
+                  plan: activePlans[index],
+                  isRecommended: recommendedTitle == activePlans[index].title,
+                );
               },
             ),
           ),
@@ -108,8 +119,13 @@ class PersonalizedplanHealthpage extends StatelessWidget {
 
 class PlanCard extends StatelessWidget {
   final WorkoutPlan plan;
+  final bool isRecommended;
 
-  const PlanCard({super.key, required this.plan});
+  const PlanCard({
+    super.key,
+    required this.plan,
+    this.isRecommended = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -118,27 +134,54 @@ class PlanCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
+        color: isRecommended
+            ? Colors.white.withValues(alpha: 0.26)
+            : Colors.white.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.25),
-          width: 1,
+          color: isRecommended
+              ? Colors.white.withValues(alpha: 0.85)
+              : Colors.white.withValues(alpha: 0.25),
+          width: isRecommended ? 2 : 1,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              plan.icon,
-              color: Colors.white,
-              size: 20,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(plan.icon, color: Colors.white, size: 20),
+              ),
+              if (isRecommended) ...[
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      "FOR YOU",
+                      maxLines: 1,
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xFF5B3996),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 10),
           Text(

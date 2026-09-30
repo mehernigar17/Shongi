@@ -30,32 +30,27 @@ class ProfileHeader extends StatelessWidget {
                 letterSpacing: -0.5,
               ),
             ),
-            InkWell(
-              borderRadius: BorderRadius.circular(14),
-              onTap: onEdit ??
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Edit Profile coming soon!'),
-                        backgroundColor: accentColor,
-                      ),
-                    );
-                  },
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: chipBackground,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: cardBorderColor),
-                ),
-                child: const Icon(
-                  Icons.edit_outlined,
-                  size: 18,
-                  color: accentColor,
+            // The edit affordance only exists when a handler was wired up, so
+            // there is no dead tap target to fall back on.
+            if (onEdit != null)
+              InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: onEdit,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: chipBackground,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: cardBorderColor),
+                  ),
+                  child: const Icon(
+                    Icons.edit_outlined,
+                    size: 18,
+                    color: accentColor,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 16),
