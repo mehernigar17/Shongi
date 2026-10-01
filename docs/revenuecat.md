@@ -1,4 +1,4 @@
-# Shongi Plus / Doctors
+# Shongi Plus — RevenueCat entitlement for the Doctors section
 
 The Doctors section, doctor profile sheet, and booking UI require the RevenueCat
 `shongi_plus` entitlement. Firebase UID is the RevenueCat App User ID. Other
