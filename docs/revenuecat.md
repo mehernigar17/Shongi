@@ -6,7 +6,7 @@ features stay free. No health records are sent to RevenueCat.
 
 ## Dashboard configuration
 
-- Project: Shongi (`648c241e`).
+- Project: Shongi (`projb37bf2a4`), per Project Settings → General.
 - Entitlement: `shongi_plus` (`entldbf5ed1de7`).
 - Test Store product: `shongi_plus_monthly`, monthly, USD 2.99, no trial.
 - Current offering: `default` (`ofrnga1f9b9cf7b`).
